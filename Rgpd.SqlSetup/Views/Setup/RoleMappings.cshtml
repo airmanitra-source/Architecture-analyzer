@@ -1,0 +1,28 @@
+@model IReadOnlyList<Rgpd.SqlSetup.ViewModels.RoleMappingViewModel>
+@{
+    ViewData["Title"] = "Rôles & Finalités";
+}
+
+<h1>Rôles & Finalités</h1>
+<form asp-action="AddRoleMapping" method="post" class="row g-2 mb-4">
+    <div class="col-md-3"><input class="form-control" name="ApplicationRole" placeholder="Role applicatif" required /></div>
+    <div class="col-md-3"><input class="form-control" name="SqlRole" placeholder="Role SQL" required /></div>
+    <div class="col-md-3"><input class="form-control" name="Purpose" placeholder="Finalité" required /></div>
+    <div class="col-md-3"><button class="btn btn-primary" type="submit">Ajouter / Mettre à jour</button></div>
+</form>
+
+<table class="table table-striped">
+    <thead>
+        <tr><th>Role applicatif</th><th>Role SQL</th><th>Finalité</th></tr>
+    </thead>
+    <tbody>
+    @foreach (var mapping in Model)
+    {
+        <tr>
+            <td>@mapping.ApplicationRole</td>
+            <td>@mapping.SqlRole</td>
+            <td>@mapping.Purpose</td>
+        </tr>
+    }
+    </tbody>
+</table>

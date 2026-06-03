@@ -1,0 +1,32 @@
+@model IReadOnlyList<Rgpd.SqlSetup.ViewModels.SqlFieldViewModel>
+@{
+    ViewData["Title"] = "Champs personnels";
+}
+
+<h1>Champs personnels</h1>
+
+<form asp-action="AddField" method="post" class="row g-2 mb-4">
+    <div class="col-md-2"><input class="form-control" name="TableName" placeholder="Table" required /></div>
+    <div class="col-md-2"><input class="form-control" name="ColumnName" placeholder="Colonne" required /></div>
+    <div class="col-md-2"><input class="form-control" name="MaskFunction" placeholder="email()" value="default()" required /></div>
+    <div class="col-md-2"><input class="form-control" name="Purpose" placeholder="Finalité" required /></div>
+    <div class="col-md-2"><input class="form-control" name="AllowedRoles" placeholder="Roles" required /></div>
+    <div class="col-md-2"><button class="btn btn-primary" type="submit">Ajouter / Mettre à jour</button></div>
+</form>
+
+<table class="table table-striped">
+    <thead>
+        <tr><th>Table</th><th>Colonne</th><th>Finalité</th><th>Rôles</th></tr>
+    </thead>
+    <tbody>
+    @foreach (var field in Model)
+    {
+        <tr>
+            <td>@field.TableName</td>
+            <td>@field.ColumnName</td>
+            <td>@field.Purpose</td>
+            <td>@field.AllowedRoles</td>
+        </tr>
+    }
+    </tbody>
+</table>
