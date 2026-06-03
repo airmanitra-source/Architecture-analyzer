@@ -1,0 +1,18 @@
+# Build output
+[Bb]in/
+[Oo]bj/
+
+# IDE / user files
+.vs/
+*.user
+*.suo
+
+# Test artifacts
+TestResults/
+
+# Logs and packages
+*.log
+*.nupkg
+
+# OS files
+.DS_Store

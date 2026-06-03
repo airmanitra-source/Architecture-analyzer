@@ -1,0 +1,43 @@
+@model HomeIndexViewModel
+@{
+    ViewData["Title"] = "RGPD Consent";
+}
+
+<div class="container py-4">
+    <h1 class="display-6">RGPD - Licéité du consentement</h1>
+    <p class="text-muted">Connectez-vous en mode démo avec <code>/account/login-demo?role=Marketing</code> ou <code>role=Analytics</code>.</p>
+
+    <div class="card mb-4">
+        <div class="card-header">Données personnelles (affichage masqué selon rôle/consentement)</div>
+        <div class="card-body">
+            <dl class="row">
+                <dt class="col-sm-3">Nom complet</dt>
+                <dd class="col-sm-9">@Model.Profile.FullName</dd>
+
+                <dt class="col-sm-3">Email</dt>
+                <dd class="col-sm-9"><rgpd:field asp-for="Profile.Email" /></dd>
+
+                <dt class="col-sm-3">Téléphone</dt>
+                <dd class="col-sm-9"><rgpd:field asp-for="Profile.PhoneNumber" /></dd>
+            </dl>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header">Consentements utilisateur</div>
+        <div class="card-body">
+            <form asp-action="SaveConsent" method="post">
+                <input type="hidden" name="userId" value="@Model.Profile.UserId" />
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" name="marketingConsent" value="true" checked="@Model.MarketingConsent" id="marketingConsent" />
+                    <label class="form-check-label" for="marketingConsent">Autoriser la finalité Marketing</label>
+                </div>
+                <div class="form-check mt-2">
+                    <input class="form-check-input" type="checkbox" name="analyticsConsent" value="true" checked="@Model.AnalyticsConsent" id="analyticsConsent" />
+                    <label class="form-check-label" for="analyticsConsent">Autoriser la finalité Analytics</label>
+                </div>
+                <button class="btn btn-primary mt-3" type="submit">Enregistrer</button>
+            </form>
+        </div>
+    </div>
+</div>

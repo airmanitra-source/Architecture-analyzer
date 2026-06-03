@@ -1,0 +1,7 @@
+<Solution>
+  <Project Path="Rgpd.Analyzer.Tests/Rgpd.Analyzer.Tests.csproj" />
+  <Project Path="Rgpd.Analyzer/Rgpd.Analyzer.csproj" />
+  <Project Path="Rgpd.Infrastructure/Rgpd.Infrastructure.csproj" />
+  <Project Path="Rgpd.SqlSetup/Rgpd.SqlSetup.csproj" />
+  <Project Path="Rgpd.Web/Rgpd.Web.csproj" />
+</Solution>
