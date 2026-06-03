@@ -1,0 +1,20 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2012/06/nuspec.xsd">
+  <metadata>
+    <id>Rgpd.Analyzer</id>
+    <version>1.0.0</version>
+    <authors>Rgpd.Analyzer</authors>
+    <description>Package Description</description>
+    <repository type="git" commit="569031409f7e4ec0a17dc7c1fb2a9837c316359f" />
+    <dependencies>
+      <group targetFramework=".NETStandard2.0" />
+    </dependencies>
+    <contentFiles>
+      <files include="any/any/.editorconfig" buildAction="None" />
+    </contentFiles>
+  </metadata>
+  <files>
+    <file src="/tmp/workspace/airmanitra-source/Rgpd.NET/Rgpd.Analyzer/Rgpd.Analyzer.editorconfig" target="contentFiles/any/any/.editorconfig" />
+    <file src="/tmp/workspace/airmanitra-source/Rgpd.NET/Rgpd.Analyzer/bin/Debug/netstandard2.0/Rgpd.Analyzer.dll" target="analyzers/dotnet/cs/Rgpd.Analyzer.dll" />
+  </files>
+</package>

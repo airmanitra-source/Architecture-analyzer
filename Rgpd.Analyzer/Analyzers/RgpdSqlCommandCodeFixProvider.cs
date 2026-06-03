@@ -47,13 +47,15 @@ public sealed class RgpdSqlCommandCodeFixProvider : CodeFixProvider
         ObjectCreationExpressionSyntax creationExpression,
         CancellationToken cancellationToken)
     {
-        var arguments = creationExpression.ArgumentList?.Arguments;
+        var arguments = creationExpression.ArgumentList?.Arguments ?? default;
+        var hasTwoArguments = arguments.Count >= 2;
+        var hasOneArgument = arguments.Count >= 1;
 
-        var connectionArgument = arguments is { Count: >= 2 }
+        var connectionArgument = hasTwoArguments
             ? arguments[1].Expression
             : SyntaxFactory.IdentifierName("connection");
 
-        var sqlArgument = arguments is { Count: >= 1 }
+        var sqlArgument = hasOneArgument
             ? arguments[0].Expression
             : SyntaxFactory.LiteralExpression(SyntaxKind.StringLiteralExpression, SyntaxFactory.Literal(string.Empty));
 

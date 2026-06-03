@@ -1,0 +1,13 @@
+/tmp/workspace/airmanitra-source/Rgpd.NET/Rgpd.Infrastructure/bin/Debug/net10.0/Rgpd.Infrastructure.deps.json
+/tmp/workspace/airmanitra-source/Rgpd.NET/Rgpd.Infrastructure/bin/Debug/net10.0/Rgpd.Infrastructure.dll
+/tmp/workspace/airmanitra-source/Rgpd.NET/Rgpd.Infrastructure/bin/Debug/net10.0/Rgpd.Infrastructure.pdb
+/tmp/workspace/airmanitra-source/Rgpd.NET/Rgpd.Infrastructure/obj/Debug/net10.0/Rgpd.Infrastructure.csproj.AssemblyReference.cache
+/tmp/workspace/airmanitra-source/Rgpd.NET/Rgpd.Infrastructure/obj/Debug/net10.0/Rgpd.Infrastructure.GeneratedMSBuildEditorConfig.editorconfig
+/tmp/workspace/airmanitra-source/Rgpd.NET/Rgpd.Infrastructure/obj/Debug/net10.0/Rgpd.Infrastructure.AssemblyInfoInputs.cache
+/tmp/workspace/airmanitra-source/Rgpd.NET/Rgpd.Infrastructure/obj/Debug/net10.0/Rgpd.Infrastructure.AssemblyInfo.cs
+/tmp/workspace/airmanitra-source/Rgpd.NET/Rgpd.Infrastructure/obj/Debug/net10.0/Rgpd.Infrastructure.csproj.CoreCompileInputs.cache
+/tmp/workspace/airmanitra-source/Rgpd.NET/Rgpd.Infrastructure/obj/Debug/net10.0/Rgpd.Infrastructure.sourcelink.json
+/tmp/workspace/airmanitra-source/Rgpd.NET/Rgpd.Infrastructure/obj/Debug/net10.0/Rgpd.Infrastructure.dll
+/tmp/workspace/airmanitra-source/Rgpd.NET/Rgpd.Infrastructure/obj/Debug/net10.0/refint/Rgpd.Infrastructure.dll
+/tmp/workspace/airmanitra-source/Rgpd.NET/Rgpd.Infrastructure/obj/Debug/net10.0/Rgpd.Infrastructure.pdb
+/tmp/workspace/airmanitra-source/Rgpd.NET/Rgpd.Infrastructure/obj/Debug/net10.0/ref/Rgpd.Infrastructure.dll

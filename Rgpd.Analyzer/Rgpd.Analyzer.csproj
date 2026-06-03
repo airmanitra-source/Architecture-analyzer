@@ -19,7 +19,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Include="..\.editorconfig" Pack="true" PackagePath="contentFiles\any\any\.editorconfig" Link=".editorconfig" Visible="false" />
+    <None Include="Rgpd.Analyzer.editorconfig" Pack="true" PackagePath="contentFiles\any\any\.editorconfig" Link=".editorconfig" Visible="false" />
   </ItemGroup>
 
   <ItemGroup>
