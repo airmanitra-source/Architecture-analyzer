@@ -5,7 +5,6 @@ namespace Rgpd.Infrastructure.Security;
 
 public sealed class HttpContextRgpdRoleAccessor : IRgpdRoleAccessor
 {
-    private const string SqlRoleItemKey = "RgpdSqlRole";
     private readonly IHttpContextAccessor _httpContextAccessor;
 
     public HttpContextRgpdRoleAccessor(IHttpContextAccessor httpContextAccessor)
@@ -18,16 +17,16 @@ public sealed class HttpContextRgpdRoleAccessor : IRgpdRoleAccessor
         var context = _httpContextAccessor.HttpContext;
         if (context is null)
         {
-            return "Anonymous";
+            return RgpdSecurityConstants.AnonymousRole;
         }
 
-        if (context.Items.TryGetValue(SqlRoleItemKey, out var role) && role is string roleValue && !string.IsNullOrWhiteSpace(roleValue))
+        if (context.Items.TryGetValue(RgpdSecurityConstants.SqlRoleItemKey, out var role) && role is string roleValue && !string.IsNullOrWhiteSpace(roleValue))
         {
             return roleValue;
         }
 
-        return context.User.FindFirstValue("rgpd:sql-role")
+        return context.User.FindFirstValue(RgpdSecurityConstants.SqlRoleClaimType)
             ?? context.User.FindFirstValue(ClaimTypes.Role)
-            ?? "Anonymous";
+            ?? RgpdSecurityConstants.AnonymousRole;
     }
 }

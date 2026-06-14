@@ -11,7 +11,7 @@ public sealed class SqlRoleContextMiddleware
 
     public async Task InvokeAsync(HttpContext context)
     {
-        context.Items["RgpdSqlRole"] = context.User.FindFirst("rgpd:sql-role")?.Value ?? "Anonymous";
+        context.Items[Rgpd.Infrastructure.Security.RgpdSecurityConstants.SqlRoleItemKey] = context.User.FindFirst(Rgpd.Infrastructure.Security.RgpdSecurityConstants.SqlRoleClaimType)?.Value ?? Rgpd.Infrastructure.Security.RgpdSecurityConstants.AnonymousRole;
         await _next(context);
     }
 }

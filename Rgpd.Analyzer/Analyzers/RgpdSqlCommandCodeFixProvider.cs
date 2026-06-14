@@ -35,9 +35,9 @@ public sealed class RgpdSqlCommandCodeFixProvider : CodeFixProvider
 
         context.RegisterCodeFix(
             CodeAction.Create(
-                title: "Use SqlCommandFactory.CreateFilterCommand",
+                title: Constants.CodeFixTitle,
                 createChangedDocument: cancellationToken => ReplaceWithFactoryCallAsync(context.Document, root, creationExpression, cancellationToken),
-                equivalenceKey: "UseSqlCommandFactory"),
+                equivalenceKey: Constants.CodeFixEquivalenceKey),
             diagnostic);
     }
 
@@ -53,11 +53,11 @@ public sealed class RgpdSqlCommandCodeFixProvider : CodeFixProvider
 
         var connectionArgument = hasTwoArguments
             ? arguments[1].Expression
-            : SyntaxFactory.IdentifierName("connection");
+            : SyntaxFactory.IdentifierName(Constants.ConnectionIdentifier);
 
         var sqlArgument = hasOneArgument
             ? arguments[0].Expression
-            : SyntaxFactory.LiteralExpression(SyntaxKind.StringLiteralExpression, SyntaxFactory.Literal(string.Empty));
+            : SyntaxFactory.LiteralExpression(SyntaxKind.StringLiteralExpression, SyntaxFactory.Literal(Constants.StringEmpty));
 
         var replacement = SyntaxFactory.InvocationExpression(
                 SyntaxFactory.MemberAccessExpression(

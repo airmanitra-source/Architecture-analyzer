@@ -1,3 +1,4 @@
+@using Rgpd.Infrastructure.Security
 @model HomeIndexViewModel
 @{
     ViewData["Title"] = "RGPD Consent";
@@ -5,20 +6,59 @@
 
 <div class="container py-4">
     <h1 class="display-6">RGPD - Licéité du consentement</h1>
-    <p class="text-muted">Connectez-vous en mode démo avec <code>/account/login-demo?role=Marketing</code> ou <code>role=Analytics</code>.</p>
+
+    <div class="card mb-4">
+        <div class="card-header">Session courante</div>
+        <div class="card-body">
+            @if (Model.IsAuthenticated)
+            {
+                <p class="mb-2">
+                    Connecté en tant que <strong>@Model.Profile.UserId</strong> —
+                    rôle applicatif <span class="badge bg-primary">@Model.ApplicationRole</span>,
+                    rôle SQL <span class="badge bg-secondary">@Model.SqlRole</span>.
+                </p>
+                <p class="mb-3">
+                    Finalités actives :
+                    @if (Model.ActivePurposes.Any())
+                    {
+                        foreach (var purpose in Model.ActivePurposes)
+                        {
+                            <span class="badge bg-success me-1">@purpose</span>
+                        }
+                    }
+                    else
+                    {
+                        <span class="text-muted">aucune</span>
+                    }
+                </p>
+                <form asp-controller="Account" asp-action="Logout" method="post" class="d-inline">
+                    <button type="submit" class="btn btn-outline-danger btn-sm">Se déconnecter</button>
+                </form>
+            }
+            else
+            {
+                <p class="text-muted">Non connecté. Choisissez un profil de démonstration :</p>
+            }
+            <div class="mt-2">
+                <a class="btn btn-outline-primary btn-sm" asp-controller="Account" asp-action="LoginDemo" asp-route-role="Marketing">Connexion Marketing</a>
+                <a class="btn btn-outline-primary btn-sm" asp-controller="Account" asp-action="LoginDemo" asp-route-role="Analytics">Connexion Analytics</a>
+                <a class="btn btn-outline-primary btn-sm" asp-controller="Account" asp-action="LoginDemo" asp-route-role="DataOfficer">Connexion DataOfficer</a>
+            </div>
+        </div>
+    </div>
 
     <div class="card mb-4">
         <div class="card-header">Données personnelles (affichage masqué selon rôle/consentement)</div>
         <div class="card-body">
-            <dl class="row">
+            <dl class="row mb-0">
                 <dt class="col-sm-3">Nom complet</dt>
                 <dd class="col-sm-9">@Model.Profile.FullName</dd>
 
                 <dt class="col-sm-3">Email</dt>
-                <dd class="col-sm-9"><rgpd:field asp-for="Profile.Email" /></dd>
+                <dd class="col-sm-9"><rgpd-field asp-for="Profile.Email" purpose="@Purpose.Marketing" legal-basis="@LegalBasis.Consent" role="@AccessRole.Marketing" /></dd>
 
                 <dt class="col-sm-3">Téléphone</dt>
-                <dd class="col-sm-9"><rgpd:field asp-for="Profile.PhoneNumber" /></dd>
+                <dd class="col-sm-9"><rgpd-field asp-for="Profile.PhoneNumber" purpose="@Purpose.Analytics" legal-basis="@LegalBasis.LegitimateInterest" role="@AccessRole.Analytics" /></dd>
             </dl>
         </div>
     </div>

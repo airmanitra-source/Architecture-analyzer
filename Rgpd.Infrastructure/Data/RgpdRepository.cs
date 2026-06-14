@@ -17,7 +17,6 @@ public abstract class RgpdRepository<T>
     {
         await using var connection = new SqlConnection(_connectionString);
         await connection.OpenAsync(cancellationToken);
-
         await using var command = _sqlCommandFactory.CreateFilterCommand(connection, sql);
         configureParameters?.Invoke(command.Parameters);
 

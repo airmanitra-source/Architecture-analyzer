@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Security.Claims;
 using Microsoft.AspNetCore.Mvc;
 using Rgpd.Web.Contracts;
 using Rgpd.Web.Models;
@@ -17,8 +18,9 @@ public class HomeController : Controller
 
     public async Task<IActionResult> Index(CancellationToken cancellationToken)
     {
-        var userId = User.Identity?.IsAuthenticated == true
-            ? User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? "demo-user"
+        var isAuthenticated = User.Identity?.IsAuthenticated == true;
+        var userId = isAuthenticated
+            ? User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "demo-user"
             : "demo-user";
 
         var activePurposes = await _consentRepository.GetActivePurposesAsync(userId, cancellationToken);
@@ -33,7 +35,11 @@ public class HomeController : Controller
                 PhoneNumber = "+33102030405"
             },
             MarketingConsent = activePurposes.Contains("Marketing", StringComparer.OrdinalIgnoreCase),
-            AnalyticsConsent = activePurposes.Contains("Analytics", StringComparer.OrdinalIgnoreCase)
+            AnalyticsConsent = activePurposes.Contains("Analytics", StringComparer.OrdinalIgnoreCase),
+            IsAuthenticated = isAuthenticated,
+            ApplicationRole = User.FindFirst(ClaimTypes.Role)?.Value ?? "Anonymous",
+            SqlRole = User.FindFirst("rgpd:sql-role")?.Value ?? "Anonymous",
+            ActivePurposes = activePurposes.ToArray()
         };
 
         return View(vm);

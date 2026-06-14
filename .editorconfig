@@ -2,3 +2,4 @@ root = true
 
 [*.cs]
 dotnet_diagnostic.RGPD001.severity = error
+dotnet_diagnostic.RGPD002.severity = error

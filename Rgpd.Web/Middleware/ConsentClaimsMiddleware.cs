@@ -1,4 +1,5 @@
 using System.Security.Claims;
+using Rgpd.Infrastructure.Security;
 using Rgpd.Web.Contracts;
 
 namespace Rgpd.Web.Middleware;
@@ -23,11 +24,16 @@ public sealed class ConsentClaimsMiddleware
                 var identity = new ClaimsIdentity();
                 foreach (var purpose in purposes)
                 {
-                    identity.AddClaim(new Claim($"rgpd:purpose:{purpose.ToLowerInvariant()}", "true"));
+                    identity.AddClaim(new Claim($"{RgpdSecurityConstants.PurposeClaimPrefix}{purpose.ToLowerInvariant()}", RgpdSecurityConstants.EnabledClaimValue));
+                }
+
+                if (purposes.Count > 0)
+                {
+                    identity.AddClaim(new Claim($"{RgpdSecurityConstants.LegalBasisClaimPrefix}{nameof(LegalBasis.Consent).ToLowerInvariant()}", RgpdSecurityConstants.EnabledClaimValue));
                 }
 
                 var sqlRole = sqlRoleMapper.ResolveSqlRole(context.User, purposes);
-                identity.AddClaim(new Claim("rgpd:sql-role", sqlRole));
+                identity.AddClaim(new Claim(RgpdSecurityConstants.SqlRoleClaimType, sqlRole));
                 context.User.AddIdentity(identity);
             }
         }

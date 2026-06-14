@@ -1,10 +1,11 @@
+using System;
 
 namespace Rgpd.Infrastructure.Security;
 
-[AttributeUsage(AttributeTargets.Property, AllowMultiple = true)]
-public sealed class PersonalDataAttribute : Attribute
+[AttributeUsage(AttributeTargets.Method)]
+public sealed class AuthorizedPurposeAttribute : Attribute
 {
-    public PersonalDataAttribute(Purpose purpose, LegalBasis legalBasis, AccessRole accessRole)
+    public AuthorizedPurposeAttribute(Purpose purpose, LegalBasis legalBasis, AccessRole accessRole)
     {
         Purpose = purpose;
         LegalBasis = legalBasis;
