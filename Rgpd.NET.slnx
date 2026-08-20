@@ -1,5 +1,7 @@
 <Solution>
+  <Project Path="Architecture.Analyzer.Tests/Architecture.Analyzer.Tests.csproj" />
   <Project Path="Architecture.Analyzer/Architecture.Analyzer.csproj" Id="f2f56d5b-7019-40b4-91b9-26ac66af267b" />
+  <Project Path="Architecture.Rules.Demo/Architecture.Rules.Demo.csproj" Id="8109abce-4240-43d7-a16b-73f9a0623ffa" />
   <Project Path="Rgpd.Analyzer.Tests/Rgpd.Analyzer.Tests.csproj" />
   <Project Path="Rgpd.Analyzer/Rgpd.Analyzer.csproj" />
   <Project Path="Rgpd.Infrastructure/Rgpd.Infrastructure.csproj" />

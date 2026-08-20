@@ -14,12 +14,42 @@ public sealed class ModelDirectoryAnalyzerTests
         Assert.Contains(diagnostics, d => d.Id == ModelDirectoryAnalyzer.DiagnosticId);
     }
 
-    [Fact]
-    public async Task AllowsBusinessModelInsideBusinessModelsDirectory()
+    [Theory]
+    [InlineData("Business/Models")]
+    [InlineData("Business>Models")]
+    [InlineData("Business\\Models")]
+    public async Task AllowsBusinessModelInsideBusinessModelsDirectory_WithConfiguredFolderSeparators(string configuredFolder)
     {
         const string source = "public class CustomerBusinessModel { }";
 
-        var diagnostics = await ArchitectureAnalyzerTestRunner.AnalyzeAsync(source, new ModelDirectoryAnalyzer(), "Business/Models/CustomerBusinessModel.cs");
+        var diagnostics = await ArchitectureAnalyzerTestRunner.AnalyzeAsync(
+            source,
+            new ModelDirectoryAnalyzer(),
+            "Business/Models/CustomerBusinessModel.cs",
+            new Dictionary<string, string>
+            {
+                ["architecture_analyzer.model_folder"] = configuredFolder,
+            });
+
+        Assert.DoesNotContain(diagnostics, d => d.Id == ModelDirectoryAnalyzer.DiagnosticId);
+    }
+
+    [Theory]
+    [InlineData("BusinessModel=Business/Models")]
+    [InlineData("BusinessModel=Business>Models")]
+    [InlineData("BusinessModel=Business\\Models")]
+    public async Task AllowsBusinessModelInsideBusinessModelsDirectory_WithConfiguredConventionSeparators(string configuredConvention)
+    {
+        const string source = "public class CustomerBusinessModel { }";
+
+        var diagnostics = await ArchitectureAnalyzerTestRunner.AnalyzeAsync(
+            source,
+            new ModelDirectoryAnalyzer(),
+            "Business/Models/CustomerBusinessModel.cs",
+            new Dictionary<string, string>
+            {
+                ["architecture_analyzer.model_conventions"] = configuredConvention,
+            });
 
         Assert.DoesNotContain(diagnostics, d => d.Id == ModelDirectoryAnalyzer.DiagnosticId);
     }
