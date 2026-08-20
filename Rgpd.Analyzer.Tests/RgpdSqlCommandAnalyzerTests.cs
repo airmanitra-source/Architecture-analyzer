@@ -37,8 +37,8 @@ public class Demo
 }
 """;
 
-        var diagnostics = await AnalyzeAsync(source);
-        Assert.Contains(diagnostics, d => d.Id == RgpdSqlCommandAnalyzer.DiagnosticId);
+        var diagnostics = await AnalyzeAsync(source, new SqlCommandAnalyzer());
+        Assert.Contains(diagnostics, d => d.Id == SqlCommandAnalyzer.DiagnosticId);
     }
 
     [Fact]
@@ -68,10 +68,10 @@ public class Demo
 }
 """;
 
-        var (document, diagnostics, workspace) = await AnalyzeWithDocumentAsync(source);
-        var diagnostic = Assert.Single(diagnostics.Where(d => d.Id == RgpdSqlCommandAnalyzer.DiagnosticId));
+        var (document, diagnostics, workspace) = await AnalyzeWithDocumentAsync(source, new SqlCommandAnalyzer());
+        var diagnostic = Assert.Single(diagnostics.Where(d => d.Id == SqlCommandAnalyzer.DiagnosticId));
 
-        var provider = new RgpdSqlCommandCodeFixProvider();
+        var provider = new SqlCommandCodeFixProvider();
         var actions = new List<CodeAction>();
 
         var context = new CodeFixContext(
@@ -121,8 +121,8 @@ public class SqlCommandFactory
 }
 """;
 
-        var diagnostics = await AnalyzeAsync(source);
-        Assert.DoesNotContain(diagnostics, d => d.Id == RgpdSqlCommandAnalyzer.DiagnosticId);
+        var diagnostics = await AnalyzeAsync(source, new SqlCommandAnalyzer());
+        Assert.DoesNotContain(diagnostics, d => d.Id == SqlCommandAnalyzer.DiagnosticId);
     }
 
     [Fact]
@@ -166,8 +166,8 @@ public sealed class DemoService
 }
 """;
 
-        var diagnostics = await AnalyzeAsync(source);
-        Assert.Contains(diagnostics, d => d.Id == RgpdSqlCommandAnalyzer.PersonalDataPolicyDiagnosticId);
+        var diagnostics = await AnalyzeAsync(source, new RgpdPersonalDataPolicyAnalyzer());
+        Assert.Contains(diagnostics, d => d.Id == RgpdPersonalDataPolicyAnalyzer.DiagnosticId);
     }
 
     [Fact]
@@ -211,8 +211,8 @@ public sealed class DemoService
 }
 """;
 
-        var diagnostics = await AnalyzeAsync(source);
-        Assert.Contains(diagnostics, d => d.Id == RgpdSqlCommandAnalyzer.PersonalDataPolicyDiagnosticId);
+        var diagnostics = await AnalyzeAsync(source, new RgpdPersonalDataPolicyAnalyzer());
+        Assert.Contains(diagnostics, d => d.Id == RgpdPersonalDataPolicyAnalyzer.DiagnosticId);
     }
 
     [Fact]
@@ -257,17 +257,17 @@ public sealed class DemoService
 }
 """;
 
-        var diagnostics = await AnalyzeAsync(source);
-        Assert.DoesNotContain(diagnostics, d => d.Id == RgpdSqlCommandAnalyzer.PersonalDataPolicyDiagnosticId);
+        var diagnostics = await AnalyzeAsync(source, new RgpdPersonalDataPolicyAnalyzer());
+        Assert.DoesNotContain(diagnostics, d => d.Id == RgpdPersonalDataPolicyAnalyzer.DiagnosticId);
     }
 
-    private static async Task<ImmutableArray<Diagnostic>> AnalyzeAsync(string source)
+    private static async Task<ImmutableArray<Diagnostic>> AnalyzeAsync(string source, DiagnosticAnalyzer analyzer, string fileName = "Test.cs")
     {
-        var (_, diagnostics, _) = await AnalyzeWithDocumentAsync(source);
+        var (_, diagnostics, _) = await AnalyzeWithDocumentAsync(source, analyzer, fileName);
         return diagnostics;
     }
 
-    private static async Task<(Document document, ImmutableArray<Diagnostic> diagnostics, AdhocWorkspace workspace)> AnalyzeWithDocumentAsync(string source)
+    private static async Task<(Document document, ImmutableArray<Diagnostic> diagnostics, AdhocWorkspace workspace)> AnalyzeWithDocumentAsync(string source, DiagnosticAnalyzer analyzer, string fileName = "Test.cs")
     {
         var workspace = new AdhocWorkspace();
         var projectId = ProjectId.CreateNewId();
@@ -279,7 +279,7 @@ public sealed class DemoService
             .AddMetadataReference(projectId, MetadataReference.CreateFromFile(typeof(object).Assembly.Location))
             .AddMetadataReference(projectId, MetadataReference.CreateFromFile(typeof(Enumerable).Assembly.Location))
             .AddMetadataReference(projectId, MetadataReference.CreateFromFile(typeof(Attribute).Assembly.Location))
-            .AddDocument(documentId, "Test.cs", SourceText.From(source));
+            .AddDocument(documentId, fileName, SourceText.From(source));
 
         workspace.TryApplyChanges(solution);
 
@@ -287,7 +287,6 @@ public sealed class DemoService
         var compilation = await document.Project.GetCompilationAsync();
         Assert.NotNull(compilation);
 
-        var analyzer = new RgpdSqlCommandAnalyzer();
         var diagnostics = await compilation!
             .WithAnalyzers(ImmutableArray.Create<DiagnosticAnalyzer>(analyzer))
             .GetAnalyzerDiagnosticsAsync();

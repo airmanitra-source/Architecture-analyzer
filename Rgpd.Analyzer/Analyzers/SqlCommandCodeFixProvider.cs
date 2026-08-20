@@ -11,10 +11,10 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace Rgpd.Analyzer.Analyzers;
 
-[ExportCodeFixProvider(LanguageNames.CSharp, Name = nameof(RgpdSqlCommandCodeFixProvider)), Shared]
-public sealed class RgpdSqlCommandCodeFixProvider : CodeFixProvider
+[ExportCodeFixProvider(LanguageNames.CSharp, Name = nameof(SqlCommandCodeFixProvider)), Shared]
+public sealed class SqlCommandCodeFixProvider : CodeFixProvider
 {
-    public override ImmutableArray<string> FixableDiagnosticIds => ImmutableArray.Create(RgpdSqlCommandAnalyzer.DiagnosticId);
+    public override ImmutableArray<string> FixableDiagnosticIds => ImmutableArray.Create(SqlCommandAnalyzer.DiagnosticId);
 
     public override FixAllProvider GetFixAllProvider() => WellKnownFixAllProviders.BatchFixer;
 

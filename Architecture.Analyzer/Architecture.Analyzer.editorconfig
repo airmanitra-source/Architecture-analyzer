@@ -1,0 +1,9 @@
+[*.cs]
+
+# Valeurs par défaut : un type *BusinessModel doit être dans un dossier Business>Models.
+architecture_analyzer.model_suffix = BusinessModel
+architecture_analyzer.model_folder = Business>Models
+
+# Pour plusieurs conventions, cette option remplace les deux options ci-dessus.
+# Exemple : BusinessModel=Business/Models;DataModel=Models/Data
+architecture_analyzer.model_conventions = BusinessModel=Business/Models;DataModel=Models/Data

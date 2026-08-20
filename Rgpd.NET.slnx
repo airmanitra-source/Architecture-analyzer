@@ -1,4 +1,5 @@
 <Solution>
+  <Project Path="Architecture.Analyzer/Architecture.Analyzer.csproj" Id="f2f56d5b-7019-40b4-91b9-26ac66af267b" />
   <Project Path="Rgpd.Analyzer.Tests/Rgpd.Analyzer.Tests.csproj" />
   <Project Path="Rgpd.Analyzer/Rgpd.Analyzer.csproj" />
   <Project Path="Rgpd.Infrastructure/Rgpd.Infrastructure.csproj" />

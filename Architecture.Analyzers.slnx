@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="Architecture.Analyzer/Architecture.Analyzer.csproj" />
+  <Project Path="Architecture.Analyzer.Tests/Architecture.Analyzer.Tests.csproj" />
+</Solution>
