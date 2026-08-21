@@ -9,12 +9,26 @@ namespace Architecture.Analyzer.Tests;
 internal static class ArchitectureAnalyzerTestRunner
 {
     public static async Task<ImmutableArray<Diagnostic>> AnalyzeAsync(
+        (string fileName, string source)[] documents,
+        DiagnosticAnalyzer analyzer,
+        string projectName,
+        IReadOnlyDictionary<string, string>? analyzerConfigOptions = null)
+    {
+        var (_, diagnostics, _) = await AnalyzeWithDocumentsAsync(documents, analyzer, projectName, analyzerConfigOptions);
+        return diagnostics;
+    }
+
+    public static async Task<ImmutableArray<Diagnostic>> AnalyzeAsync(
         string source,
         DiagnosticAnalyzer analyzer,
         string fileName = "Test.cs",
         IReadOnlyDictionary<string, string>? analyzerConfigOptions = null)
     {
-        var (_, diagnostics, _) = await AnalyzeWithDocumentAsync(source, analyzer, fileName, analyzerConfigOptions);
+        var (_, diagnostics, _) = await AnalyzeWithDocumentsAsync(
+            [(fileName, source)],
+            analyzer,
+            "TestProject",
+            analyzerConfigOptions);
         return diagnostics;
     }
 
@@ -24,21 +38,42 @@ internal static class ArchitectureAnalyzerTestRunner
         string fileName = "Test.cs",
         IReadOnlyDictionary<string, string>? analyzerConfigOptions = null)
     {
+        var result = await AnalyzeWithDocumentsAsync(
+            [(fileName, source)],
+            analyzer,
+            "TestProject",
+            analyzerConfigOptions);
+
+        return result;
+    }
+
+    public static async Task<(Document document, ImmutableArray<Diagnostic> diagnostics, AdhocWorkspace workspace)> AnalyzeWithDocumentsAsync(
+        (string fileName, string source)[] documents,
+        DiagnosticAnalyzer analyzer,
+        string projectName,
+        IReadOnlyDictionary<string, string>? analyzerConfigOptions = null)
+    {
         var workspace = new AdhocWorkspace();
         var projectId = ProjectId.CreateNewId();
-        var documentId = DocumentId.CreateNewId(projectId);
 
         var solution = workspace.CurrentSolution
-            .AddProject(ProjectInfo.Create(projectId, VersionStamp.Default, "TestProject", "TestProject", LanguageNames.CSharp))
+            .AddProject(ProjectInfo.Create(projectId, VersionStamp.Default, projectName, projectName, LanguageNames.CSharp))
             .WithProjectCompilationOptions(projectId, new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary))
             .AddMetadataReference(projectId, MetadataReference.CreateFromFile(typeof(object).Assembly.Location))
             .AddMetadataReference(projectId, MetadataReference.CreateFromFile(typeof(Enumerable).Assembly.Location))
-            .AddMetadataReference(projectId, MetadataReference.CreateFromFile(typeof(Attribute).Assembly.Location))
-            .AddDocument(documentId, fileName, SourceText.From(source));
+            .AddMetadataReference(projectId, MetadataReference.CreateFromFile(typeof(Attribute).Assembly.Location));
+
+        DocumentId? firstDocumentId = null;
+        foreach (var (fileName, source) in documents)
+        {
+            var documentId = DocumentId.CreateNewId(projectId);
+            firstDocumentId ??= documentId;
+            solution = solution.AddDocument(documentId, fileName, SourceText.From(source));
+        }
 
         workspace.TryApplyChanges(solution);
 
-        var document = workspace.CurrentSolution.GetDocument(documentId)!;
+        var document = workspace.CurrentSolution.GetDocument(firstDocumentId!)!;
         var compilation = await document.Project.GetCompilationAsync();
         Assert.NotNull(compilation);
 
