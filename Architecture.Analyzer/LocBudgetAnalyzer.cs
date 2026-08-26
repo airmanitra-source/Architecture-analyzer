@@ -95,7 +95,7 @@ public sealed class LocBudgetAnalyzer : DiagnosticAnalyzer
                         return;
                     }
 
-                    var violation = _locBudgetRuleService.AnalyzeType(declaration, limits.MaxClassLines.Value, nodeContext.CancellationToken);
+                    var violation = _locBudgetRuleService.GetLocViolationsOnType(declaration, limits.MaxClassLines.Value, nodeContext.CancellationToken);
                     if (violation is null)
                     {
                         return;
@@ -124,7 +124,7 @@ public sealed class LocBudgetAnalyzer : DiagnosticAnalyzer
                         return;
                     }
 
-                    var violation = _locBudgetRuleService.AnalyzeMethod(declaration, limits.MaxMethodLines.Value, nodeContext.CancellationToken);
+                    var violation = _locBudgetRuleService.GetLocViolationOnMethod(declaration, limits.MaxMethodLines.Value, nodeContext.CancellationToken);
                     if (violation is null)
                     {
                         return;

@@ -7,5 +7,5 @@ namespace Architecture.Analyzer.Services.PropertyOrderRule;
 
 internal interface IClassPropertyOrderRuleService
 {
-    List<ClassPropertyOrderViolation> Analyze(ClassDeclarationSyntax declaration, CancellationToken cancellationToken);
+    List<ClassPropertyOrderViolation> GetClassPropertyOrderViolations(ClassDeclarationSyntax declaration, CancellationToken cancellationToken);
 }

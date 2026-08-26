@@ -76,7 +76,7 @@ public sealed class ModuleProviderAnalyzer : DiagnosticAnalyzer
     private void AnalyzeNamedType(SymbolAnalysisContext context, List<INamedTypeSymbol> providerInterfaces)
     {
         var type = (INamedTypeSymbol)context.Symbol;
-        var violation = _moduleProviderRuleService.AnalyzeType(type, providerInterfaces, context.CancellationToken);
+        var violation = _moduleProviderRuleService.GetProviderImplementionViolation(type, providerInterfaces, context.CancellationToken);
         if (violation is null)
         {
             return;

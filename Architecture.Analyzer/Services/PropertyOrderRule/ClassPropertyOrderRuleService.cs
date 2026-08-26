@@ -12,7 +12,7 @@ internal sealed class ClassPropertyOrderRuleService : IClassPropertyOrderRuleSer
 {
     private static readonly string[] IdentifierSuffixes = ["Id", "Ids", "IDs"];
 
-    public List<ClassPropertyOrderViolation> Analyze(ClassDeclarationSyntax declaration, CancellationToken cancellationToken)
+    public List<ClassPropertyOrderViolation> GetClassPropertyOrderViolations(ClassDeclarationSyntax declaration, CancellationToken cancellationToken)
     {
         var violations = new List<ClassPropertyOrderViolation>();
         string? previousPropertyName = null;

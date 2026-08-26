@@ -56,7 +56,7 @@ public sealed class ClassPropertyOrderAnalyzer : DiagnosticAnalyzer
             return;
         }
 
-        var violations = _dtoPropertyOrderRuleService.Analyze(declaration, context.CancellationToken);
+        var violations = _dtoPropertyOrderRuleService.GetClassPropertyOrderViolations(declaration, context.CancellationToken);
         foreach (var violation in violations)
         {
             context.ReportDiagnostic(Diagnostic.Create(

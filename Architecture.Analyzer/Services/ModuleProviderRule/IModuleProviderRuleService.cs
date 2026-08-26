@@ -7,7 +7,7 @@ namespace Architecture.Analyzer.Services.ModuleProviderRule;
 
 internal interface IModuleProviderRuleService
 {
-    ProviderImplementationViolation? AnalyzeType(INamedTypeSymbol type, List<INamedTypeSymbol> providerInterfaces, CancellationToken cancellationToken);
+    ProviderImplementationViolation? GetProviderImplementionViolation(INamedTypeSymbol type, List<INamedTypeSymbol> providerInterfaces, CancellationToken cancellationToken);
 
     List<INamedTypeSymbol> GetProviderInterfaces(Compilation compilation, CancellationToken cancellationToken);
 

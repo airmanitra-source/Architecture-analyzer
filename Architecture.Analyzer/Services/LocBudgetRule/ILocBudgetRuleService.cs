@@ -11,11 +11,11 @@ internal interface ILocBudgetRuleService
 
     LocBudgetSettings GetSettings(Compilation compilation, AnalyzerConfigOptions options, global::System.Threading.CancellationToken cancellationToken);
 
-    LocBudgetViolation? AnalyzeType(TypeDeclarationSyntax declaration, int maxLines, global::System.Threading.CancellationToken cancellationToken);
+    LocBudgetViolation? GetLocViolationsOnType(TypeDeclarationSyntax declaration, int maxLines, global::System.Threading.CancellationToken cancellationToken);
 
-    LocBudgetViolation? AnalyzeMethod(MethodDeclarationSyntax declaration, int maxLines, global::System.Threading.CancellationToken cancellationToken);
+    LocBudgetViolation? GetLocViolationOnMethod(MethodDeclarationSyntax declaration, int maxLines, global::System.Threading.CancellationToken cancellationToken);
 
-    LocBudgetViolation? AnalyzeProject(Compilation compilation, int budget, global::System.Threading.CancellationToken cancellationToken);
+    LocBudgetViolation? GetLocViolationOnProject(Compilation compilation, int budget, global::System.Threading.CancellationToken cancellationToken);
 
-    LocBudgetViolation? AnalyzeGlobal(Compilation compilation, int budget, global::System.Threading.CancellationToken cancellationToken);
+    LocBudgetViolation? GetLocViolationOnGlobal(Compilation compilation, int budget, global::System.Threading.CancellationToken cancellationToken);
 }

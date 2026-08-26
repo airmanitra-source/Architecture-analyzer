@@ -17,7 +17,7 @@ internal sealed class ModelConventionRuleService : IModelConventionRuleService
     private const char ConventionSeparator = ';';
     private const string ConventionValueSeparator = "=";
 
-    public List<ModelConventionViolation> ReadConventions(AnalyzerConfigOptions options)
+    public List<ModelConventionViolation> GetModelConventionViolations(AnalyzerConfigOptions options)
     {
         if (options.TryGetValue(ModelConventionsOption, out var configuredConventions)
             && !string.IsNullOrWhiteSpace(configuredConventions))

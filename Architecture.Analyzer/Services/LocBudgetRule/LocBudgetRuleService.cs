@@ -78,10 +78,10 @@ internal sealed class LocBudgetRuleService : ILocBudgetRuleService
         }
     }
 
-    public LocBudgetViolation? AnalyzeType(TypeDeclarationSyntax declaration, int maxLines, global::System.Threading.CancellationToken cancellationToken)
+    public LocBudgetViolation? GetLocViolationsOnType(TypeDeclarationSyntax declaration, int maxLines, global::System.Threading.CancellationToken cancellationToken)
         => AnalyzeCurrentDeclaration(declaration.SyntaxTree, declaration.Span, declaration.Identifier.ValueText, "classe", maxLines, cancellationToken, declaration.Identifier.GetLocation());
 
-    public LocBudgetViolation? AnalyzeMethod(MethodDeclarationSyntax declaration, int maxLines, global::System.Threading.CancellationToken cancellationToken)
+    public LocBudgetViolation? GetLocViolationOnMethod(MethodDeclarationSyntax declaration, int maxLines, global::System.Threading.CancellationToken cancellationToken)
         => AnalyzeCurrentDeclaration(declaration.SyntaxTree, declaration.Span, declaration.Identifier.ValueText, "méthode", maxLines, cancellationToken, declaration.Identifier.GetLocation());
 
     public LocBudgetViolation? AnalyzeProject(Compilation compilation, int budget, global::System.Threading.CancellationToken cancellationToken)

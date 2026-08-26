@@ -20,7 +20,7 @@ internal sealed class ModuleProviderRuleService : IModuleProviderRuleService
         _modelDirectoryRuleService = modelDirectoryRuleService;
     }
 
-    public ProviderImplementationViolation? AnalyzeType(
+    public ProviderImplementationViolation? GetProviderImplementionViolation(
         INamedTypeSymbol type,
         List<INamedTypeSymbol> providerInterfaces,
         CancellationToken cancellationToken)

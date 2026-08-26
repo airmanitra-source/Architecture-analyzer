@@ -106,7 +106,7 @@ public sealed class ModelDirectoryAnalyzer : DiagnosticAnalyzer
         }
 
         var options = context.Options.AnalyzerConfigOptionsProvider.GetOptions(declaration.SyntaxTree);
-        var conventions = _modelConventionService.ReadConventions(options);
+        var conventions = _modelConventionService.GetModelConventionViolations(options);
         foreach (var convention in conventions)
         {
             if (!typeName.EndsWith(convention.Suffix, StringComparison.Ordinal))
