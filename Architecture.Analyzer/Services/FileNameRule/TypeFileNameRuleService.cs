@@ -1,7 +1,7 @@
 using System;
 using System.IO;
 
-namespace Architecture.Analyzer;
+namespace Architecture.Analyzer.Services.FileNameRule;
 
 internal sealed class TypeFileNameRuleService : ITypeFileNameRuleService
 {

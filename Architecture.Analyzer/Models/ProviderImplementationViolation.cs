@@ -1,6 +1,6 @@
 using Microsoft.CodeAnalysis;
 
-namespace Architecture.Analyzer;
+namespace Architecture.Analyzer.Models;
 
 internal sealed class ProviderImplementationViolation
 {

@@ -1,11 +1,12 @@
 using System;
 using System.Collections.Generic;
-using System.Collections.Immutable;
 using System.Linq;
 using System.Threading;
+using Architecture.Analyzer.Models;
+using Architecture.Analyzer.Services.ModelDirectoryRule;
 using Microsoft.CodeAnalysis;
 
-namespace Architecture.Analyzer;
+namespace Architecture.Analyzer.Services.ModuleProviderRule;
 
 internal sealed class ModuleProviderRuleService : IModuleProviderRuleService
 {
@@ -21,7 +22,7 @@ internal sealed class ModuleProviderRuleService : IModuleProviderRuleService
 
     public ProviderImplementationViolation? AnalyzeType(
         INamedTypeSymbol type,
-        ImmutableArray<INamedTypeSymbol> providerInterfaces,
+        List<INamedTypeSymbol> providerInterfaces,
         CancellationToken cancellationToken)
     {
         if (type.TypeKind is TypeKind.Interface or TypeKind.Error)
@@ -48,10 +49,10 @@ internal sealed class ModuleProviderRuleService : IModuleProviderRuleService
         return null;
     }
 
-    public ImmutableArray<INamedTypeSymbol> GetProviderInterfaces(Compilation compilation, CancellationToken cancellationToken)
+    public List<INamedTypeSymbol> GetProviderInterfaces(Compilation compilation, CancellationToken cancellationToken)
         => GetAllNamedTypes(compilation.Assembly.GlobalNamespace)
             .Where(type => type.TypeKind == TypeKind.Interface && IsInProvidersFolder(type, cancellationToken))
-            .ToImmutableArray();
+            .ToList();
 
     public bool IsModuleProject(string? assemblyName)
         => !string.IsNullOrWhiteSpace(assemblyName) && assemblyName.EndsWith(ModuleSuffix, StringComparison.Ordinal);

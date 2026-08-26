@@ -8,8 +8,8 @@ namespace Architecture.Analyzer.Tests;
 
 internal static class ArchitectureAnalyzerTestRunner
 {
-    public static async Task<ImmutableArray<Diagnostic>> AnalyzeAsync(
-        (string fileName, string source)[] documents,
+    public static async Task<List<Diagnostic>> AnalyzeAsync(
+        IReadOnlyList<(string fileName, string source)> documents,
         DiagnosticAnalyzer analyzer,
         string projectName,
         IReadOnlyDictionary<string, string>? analyzerConfigOptions = null)
@@ -18,7 +18,7 @@ internal static class ArchitectureAnalyzerTestRunner
         return diagnostics;
     }
 
-    public static async Task<ImmutableArray<Diagnostic>> AnalyzeAsync(
+    public static async Task<List<Diagnostic>> AnalyzeAsync(
         string source,
         DiagnosticAnalyzer analyzer,
         string fileName = "Test.cs",
@@ -32,7 +32,7 @@ internal static class ArchitectureAnalyzerTestRunner
         return diagnostics;
     }
 
-    public static async Task<(Document document, ImmutableArray<Diagnostic> diagnostics, AdhocWorkspace workspace)> AnalyzeWithDocumentAsync(
+    public static async Task<(Document document, List<Diagnostic> diagnostics, AdhocWorkspace workspace)> AnalyzeWithDocumentAsync(
         string source,
         DiagnosticAnalyzer analyzer,
         string fileName = "Test.cs",
@@ -47,8 +47,8 @@ internal static class ArchitectureAnalyzerTestRunner
         return result;
     }
 
-    public static async Task<(Document document, ImmutableArray<Diagnostic> diagnostics, AdhocWorkspace workspace)> AnalyzeWithDocumentsAsync(
-        (string fileName, string source)[] documents,
+    public static async Task<(Document document, List<Diagnostic> diagnostics, AdhocWorkspace workspace)> AnalyzeWithDocumentsAsync(
+        IReadOnlyList<(string fileName, string source)> documents,
         DiagnosticAnalyzer analyzer,
         string projectName,
         IReadOnlyDictionary<string, string>? analyzerConfigOptions = null)
@@ -87,7 +87,7 @@ internal static class ArchitectureAnalyzerTestRunner
                 new CompilationWithAnalyzersOptions(options, null, true, false))
             .GetAnalyzerDiagnosticsAsync();
 
-        return (document, diagnostics, workspace);
+        return (document, diagnostics.ToList(), workspace);
     }
 
     private sealed class TestAnalyzerConfigOptionsProvider(IReadOnlyDictionary<string, string>? values) : AnalyzerConfigOptionsProvider

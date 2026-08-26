@@ -1,4 +1,4 @@
-namespace Architecture.Analyzer;
+namespace Architecture.Analyzer.Services.ModelDirectoryRule;
 
 internal interface IModelDirectoryRuleService
 {

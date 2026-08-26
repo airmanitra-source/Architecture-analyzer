@@ -1,3 +1,4 @@
+using Architecture.Analyzer.Services.ModelDirectoryRule;
 using System;
 using System.IO;
 

@@ -1,6 +1,9 @@
 using System;
 using System.Collections.Immutable;
 using System.IO;
+using Architecture.Analyzer.Services.FileNameRule;
+using Architecture.Analyzer.Services.ModelConventionRule;
+using Architecture.Analyzer.Services.ModelDirectoryRule;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
@@ -20,7 +23,7 @@ public sealed class ModelDirectoryAnalyzer : DiagnosticAnalyzer
     private const string FileNameTitle = "Le nom du fichier doit correspondre au nom du type";
     private const string Category = "Architecture";
 
-    private readonly IModelConventionService _modelConventionService;
+    private readonly IModelConventionRuleService _modelConventionService;
     private readonly IModelDirectoryRuleService _modelDirectoryRuleService;
     private readonly ITypeFileNameRuleService _typeFileNameRuleService;
 
@@ -43,12 +46,12 @@ public sealed class ModelDirectoryAnalyzer : DiagnosticAnalyzer
     public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics => ImmutableArray.Create(DirectoryRule, FileNameRule);
 
     public ModelDirectoryAnalyzer()
-        : this(new ModelConventionService(), new ModelDirectoryRuleService(), new TypeFileNameRuleService())
+        : this(new ModelConventionRuleService(), new ModelDirectoryRuleService(), new TypeFileNameRuleService())
     {
     }
 
     internal ModelDirectoryAnalyzer(
-        IModelConventionService modelConventionService,
+        IModelConventionRuleService modelConventionService,
         IModelDirectoryRuleService modelDirectoryRuleService,
         ITypeFileNameRuleService typeFileNameRuleService)
     {

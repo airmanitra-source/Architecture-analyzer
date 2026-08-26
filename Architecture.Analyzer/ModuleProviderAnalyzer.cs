@@ -1,4 +1,6 @@
+using System.Collections.Generic;
 using System.Collections.Immutable;
+using Architecture.Analyzer.Services.ModuleProviderRule;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Diagnostics;
 
@@ -71,7 +73,7 @@ public sealed class ModuleProviderAnalyzer : DiagnosticAnalyzer
             endContext => AnalyzeCompilationEnd(endContext, providerInterfaces));
     }
 
-    private void AnalyzeNamedType(SymbolAnalysisContext context, ImmutableArray<INamedTypeSymbol> providerInterfaces)
+    private void AnalyzeNamedType(SymbolAnalysisContext context, List<INamedTypeSymbol> providerInterfaces)
     {
         var type = (INamedTypeSymbol)context.Symbol;
         var violation = _moduleProviderRuleService.AnalyzeType(type, providerInterfaces, context.CancellationToken);
@@ -88,9 +90,9 @@ public sealed class ModuleProviderAnalyzer : DiagnosticAnalyzer
             context.Compilation.AssemblyName));
     }
 
-    private void AnalyzeCompilationEnd(CompilationAnalysisContext context, ImmutableArray<INamedTypeSymbol> providerInterfaces)
+    private void AnalyzeCompilationEnd(CompilationAnalysisContext context, List<INamedTypeSymbol> providerInterfaces)
     {
-        if (providerInterfaces.Length > 0)
+        if (providerInterfaces.Count > 0)
         {
             return;
         }
