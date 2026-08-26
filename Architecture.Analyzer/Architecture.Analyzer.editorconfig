@@ -7,3 +7,7 @@ architecture_analyzer.model_folder = Models/Business
 # Pour plusieurs conventions, cette option remplace les deux options ci-dessus.
 # Exemple : BusinessModel=Models/Business;DataModel=Models/Data
 architecture_analyzer.model_conventions = BusinessModel=Models/Business;DataModel=Models/Data
+
+# Règles d'exclusion par dossier : dossier=SuffixeAutorisé1,SuffixeAutorisé2
+# Exemple : Models/Business=BusinessModel;Models/Data=DataModel
+architecture_analyzer.model_folder_allowed_suffixes = Models/Business=BusinessModel;Models/Data=DataModel

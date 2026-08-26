@@ -4,8 +4,8 @@ using System.Text;
 
 namespace HR.Module
 {
-    /*
-    internal class TestBusinessModel
+    
+    public class HrModule : IHrModule
     {
-    }*/
+    }
 }

@@ -11,7 +11,11 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Business\Models\" />
+    <EditorConfigFiles Remove="D:\rgpd\HR.Module\.editorconfig" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="D:\rgpd\HR.Module\.editorconfig" />
   </ItemGroup>
 
 </Project>
