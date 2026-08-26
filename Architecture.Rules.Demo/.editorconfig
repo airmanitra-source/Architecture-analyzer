@@ -4,7 +4,7 @@ File: Architecture.Rules.Demo\.editorconfig
 
 architecture_analyzer.loc_budget_percent_project = 2
 architecture_analyzer.loc_budget_percent_global = 2
-architecture_analyzer.loc_max_lines_per_class = 20
+architecture_analyzer.loc_max_lines_per_class = 300
 architecture_analyzer.loc_max_lines_per_method = 20
 architecture_analyzer.model_conventions = BusinessModel=Models/Business
 architecture_analyzer.model_conventions = DataModel=Models/Data

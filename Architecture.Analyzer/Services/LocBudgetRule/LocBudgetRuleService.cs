@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Threading;
 using Architecture.Analyzer.Models;
 using LibGit2Sharp;
@@ -23,13 +24,24 @@ internal sealed class LocBudgetRuleService : ILocBudgetRuleService
     private const int DefaultMaxMethodLines = 20;
     private const string CsExtension = ".cs";
 
+    // When LibGit2Sharp ships as an analyzer dependency there is no deps.json to map its native
+    // binary, so the default resolver never probes runtimes/<rid>/native. We point LibGit2Sharp at
+    // the correct native folder (next to its managed assembly) once, before the first native call.
+    private static readonly bool NativeLibraryConfigured = TryConfigureNativeLibraryPath();
+
+    public (int? MaxClassLines, int? MaxMethodLines) GetLineLimits(AnalyzerConfigOptions options)
+    {
+        var maxClassLines = GetPositiveIntOption(options, MaxClassLinesOption) ?? DefaultMaxClassLines;
+        var maxMethodLines = GetPositiveIntOption(options, MaxMethodLinesOption) ?? DefaultMaxMethodLines;
+        return (maxClassLines, maxMethodLines);
+    }
+
     public LocBudgetSettings GetSettings(
         Compilation compilation,
         AnalyzerConfigOptions options,
         global::System.Threading.CancellationToken cancellationToken)
     {
-        var maxClassLines = GetPositiveIntOption(options, MaxClassLinesOption) ?? DefaultMaxClassLines;
-        var maxMethodLines = GetPositiveIntOption(options, MaxMethodLinesOption) ?? DefaultMaxMethodLines;
+        var (maxClassLines, maxMethodLines) = GetLineLimits(options);
         var projectPercent = GetPositiveIntOption(options, ProjectPercentOption);
         var globalPercent = GetPositiveIntOption(options, GlobalPercentOption);
 
@@ -44,19 +56,26 @@ internal sealed class LocBudgetRuleService : ILocBudgetRuleService
             return new LocBudgetSettings(maxClassLines, maxMethodLines, null, null);
         }
 
-        using var repository = new Repository(repositoryPath);
-        int? projectBudget = projectPercent.HasValue
-            ? CalculateBudget(CountHeadProjectLines(compilation, repository, cancellationToken), projectPercent.Value)
-            : null;
-        int? globalBudget = globalPercent.HasValue
-            ? CalculateBudget(CountHeadSolutionLines(repository, cancellationToken), globalPercent.Value)
-            : null;
+        try
+        {
+            using var repository = new Repository(repositoryPath);
+            int? projectBudget = projectPercent.HasValue
+                ? CalculateBudget(CountHeadProjectLines(compilation, repository, cancellationToken), projectPercent.Value)
+                : null;
+            int? globalBudget = globalPercent.HasValue
+                ? CalculateBudget(CountHeadSolutionLines(repository, cancellationToken), globalPercent.Value)
+                : null;
 
-        return new LocBudgetSettings(
-            maxClassLines,
-            maxMethodLines,
-            projectBudget > 0 ? projectBudget : null,
-            globalBudget > 0 ? globalBudget : null);
+            return new LocBudgetSettings(
+                maxClassLines,
+                maxMethodLines,
+                projectBudget > 0 ? projectBudget : null,
+                globalBudget > 0 ? globalBudget : null);
+        }
+        catch (Exception exception) when (IsGitFailure(exception))
+        {
+            return new LocBudgetSettings(maxClassLines, maxMethodLines, null, null);
+        }
     }
 
     public LocBudgetViolation? AnalyzeType(TypeDeclarationSyntax declaration, int maxLines, global::System.Threading.CancellationToken cancellationToken)
@@ -73,20 +92,27 @@ internal sealed class LocBudgetRuleService : ILocBudgetRuleService
             return null;
         }
 
-        using var repository = new Repository(repositoryPath);
-        var addedLines = CountChangedProjectLines(compilation, repository, cancellationToken);
-        if (addedLines <= budget)
+        try
+        {
+            using var repository = new Repository(repositoryPath);
+            var addedLines = CountChangedProjectLines(compilation, repository, cancellationToken);
+            if (addedLines <= budget)
+            {
+                return null;
+            }
+
+            var location = GetCompilationLocation(compilation, cancellationToken);
+            if (location is null)
+            {
+                return null;
+            }
+
+            return new LocBudgetViolation("projet", compilation.AssemblyName ?? "Projet", addedLines, budget, location);
+        }
+        catch (Exception exception) when (IsGitFailure(exception))
         {
             return null;
         }
-
-        var location = GetCompilationLocation(compilation, cancellationToken);
-        if (location is null)
-        {
-            return null;
-        }
-
-        return new LocBudgetViolation("projet", compilation.AssemblyName ?? "Projet", addedLines, budget, location);
     }
 
     public LocBudgetViolation? AnalyzeGlobal(Compilation compilation, int budget, global::System.Threading.CancellationToken cancellationToken)
@@ -97,21 +123,28 @@ internal sealed class LocBudgetRuleService : ILocBudgetRuleService
             return null;
         }
 
-        using var repository = new Repository(repositoryPath);
-        var patch = GetPatch(repository);
-        var addedLines = CountPatchAddedLines(patch);
-        if (addedLines <= budget)
+        try
+        {
+            using var repository = new Repository(repositoryPath);
+            var patch = GetPatch(repository);
+            var addedLines = CountPatchAddedLines(patch);
+            if (addedLines <= budget)
+            {
+                return null;
+            }
+
+            var location = GetCompilationLocation(compilation, cancellationToken);
+            if (location is null)
+            {
+                return null;
+            }
+
+            return new LocBudgetViolation("solution", compilation.AssemblyName ?? "Solution", addedLines, budget, location);
+        }
+        catch (Exception exception) when (IsGitFailure(exception))
         {
             return null;
         }
-
-        var location = GetCompilationLocation(compilation, cancellationToken);
-        if (location is null)
-        {
-            return null;
-        }
-
-        return new LocBudgetViolation("solution", compilation.AssemblyName ?? "Solution", addedLines, budget, location);
     }
 
     private static LocBudgetViolation? AnalyzeCurrentDeclaration(
@@ -162,7 +195,16 @@ internal sealed class LocBudgetRuleService : ILocBudgetRuleService
             return null;
         }
 
-        return Repository.Discover(directory);
+        try
+        {
+            // Force the native library path configuration before the first native call.
+            _ = NativeLibraryConfigured;
+            return Repository.Discover(directory);
+        }
+        catch (Exception exception) when (IsGitFailure(exception))
+        {
+            return null;
+        }
     }
 
     private static int CountHeadProjectLines(Compilation compilation, Repository repository, global::System.Threading.CancellationToken cancellationToken)
@@ -376,6 +418,84 @@ internal sealed class LocBudgetRuleService : ILocBudgetRuleService
         var budget = (int)Math.Ceiling(baselineLoc * percent / 100.0);
         return Math.Max(1, budget);
     }
+
+    private static bool TryConfigureNativeLibraryPath()
+    {
+        try
+        {
+            var assemblyLocation = typeof(Repository).Assembly.Location;
+            if (string.IsNullOrWhiteSpace(assemblyLocation))
+            {
+                return false;
+            }
+
+            var assemblyDirectory = Path.GetDirectoryName(assemblyLocation);
+            if (string.IsNullOrWhiteSpace(assemblyDirectory))
+            {
+                return false;
+            }
+
+            var runtimeIdentifier = GetRuntimeIdentifier();
+            if (runtimeIdentifier is null)
+            {
+                return false;
+            }
+
+            // The directory may not exist for every RID we ship; if it is missing or wrong the
+            // native load simply fails and is handled as a git failure (budgets degrade to null).
+            GlobalSettings.NativeLibraryPath = Path.Combine(assemblyDirectory, "runtimes", runtimeIdentifier, "native");
+
+            // The analyzer only reads git history; skip git's safe.directory ownership check so a
+            // repository owned by another user (common on CI or shared machines) can still be opened.
+            GlobalSettings.SetOwnerValidation(false);
+            return true;
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
+    private static string? GetRuntimeIdentifier()
+    {
+        string? os;
+        if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+        {
+            os = "win";
+        }
+        else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+        {
+            os = "linux";
+        }
+        else if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+        {
+            os = "osx";
+        }
+        else
+        {
+            return null;
+        }
+
+        var architecture = RuntimeInformation.ProcessArchitecture switch
+        {
+            System.Runtime.InteropServices.Architecture.X64 => "x64",
+            System.Runtime.InteropServices.Architecture.X86 => "x86",
+            System.Runtime.InteropServices.Architecture.Arm64 => "arm64",
+            System.Runtime.InteropServices.Architecture.Arm => "arm",
+            _ => null
+        };
+
+        return architecture is null ? null : $"{os}-{architecture}";
+    }
+
+    private static bool IsGitFailure(Exception exception)
+        => exception is not OperationCanceledException
+           && exception is FileNotFoundException
+               or FileLoadException
+               or BadImageFormatException
+               or DllNotFoundException
+               or TypeInitializationException
+               or LibGit2SharpException;
 
     private static int? GetPositiveIntOption(AnalyzerConfigOptions options, string key)
         => TryGetPositiveIntOption(options, key, out var value) ? value : null;

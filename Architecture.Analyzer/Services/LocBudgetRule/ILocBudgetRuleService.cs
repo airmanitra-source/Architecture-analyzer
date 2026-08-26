@@ -7,6 +7,8 @@ namespace Architecture.Analyzer.Services.LocBudgetRule;
 
 internal interface ILocBudgetRuleService
 {
+    (int? MaxClassLines, int? MaxMethodLines) GetLineLimits(AnalyzerConfigOptions options);
+
     LocBudgetSettings GetSettings(Compilation compilation, AnalyzerConfigOptions options, global::System.Threading.CancellationToken cancellationToken);
 
     LocBudgetViolation? AnalyzeType(TypeDeclarationSyntax declaration, int maxLines, global::System.Threading.CancellationToken cancellationToken);

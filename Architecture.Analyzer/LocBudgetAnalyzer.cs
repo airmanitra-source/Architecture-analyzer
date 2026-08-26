@@ -87,17 +87,15 @@ public sealed class LocBudgetAnalyzer : DiagnosticAnalyzer
                 nodeContext =>
                 {
                     var declaration = (TypeDeclarationSyntax)nodeContext.Node;
-                    var settings = _locBudgetRuleService.GetSettings(
-                        startContext.Compilation,
-                        startContext.Options.AnalyzerConfigOptionsProvider.GetOptions(declaration.SyntaxTree),
-                        nodeContext.CancellationToken);
+                    var limits = _locBudgetRuleService.GetLineLimits(
+                        startContext.Options.AnalyzerConfigOptionsProvider.GetOptions(declaration.SyntaxTree));
 
-                    if (!settings.MaxClassLines.HasValue)
+                    if (!limits.MaxClassLines.HasValue)
                     {
                         return;
                     }
 
-                    var violation = _locBudgetRuleService.AnalyzeType(declaration, settings.MaxClassLines.Value, nodeContext.CancellationToken);
+                    var violation = _locBudgetRuleService.AnalyzeType(declaration, limits.MaxClassLines.Value, nodeContext.CancellationToken);
                     if (violation is null)
                     {
                         return;
@@ -118,17 +116,15 @@ public sealed class LocBudgetAnalyzer : DiagnosticAnalyzer
                 nodeContext =>
                 {
                     var declaration = (MethodDeclarationSyntax)nodeContext.Node;
-                    var settings = _locBudgetRuleService.GetSettings(
-                        startContext.Compilation,
-                        startContext.Options.AnalyzerConfigOptionsProvider.GetOptions(declaration.SyntaxTree),
-                        nodeContext.CancellationToken);
+                    var limits = _locBudgetRuleService.GetLineLimits(
+                        startContext.Options.AnalyzerConfigOptionsProvider.GetOptions(declaration.SyntaxTree));
 
-                    if (!settings.MaxMethodLines.HasValue)
+                    if (!limits.MaxMethodLines.HasValue)
                     {
                         return;
                     }
 
-                    var violation = _locBudgetRuleService.AnalyzeMethod(declaration, settings.MaxMethodLines.Value, nodeContext.CancellationToken);
+                    var violation = _locBudgetRuleService.AnalyzeMethod(declaration, limits.MaxMethodLines.Value, nodeContext.CancellationToken);
                     if (violation is null)
                     {
                         return;
