@@ -1,2 +1,0 @@
-[*.cs]
-dotnet_diagnostic.RGPD001.severity = error
