@@ -107,24 +107,20 @@ public sealed class ModelDirectoryAnalyzer : DiagnosticAnalyzer
 
         var options = context.Options.AnalyzerConfigOptionsProvider.GetOptions(declaration.SyntaxTree);
         var conventions = _modelConventionService.GetModelConventionViolations(options);
-        foreach (var convention in conventions)
+        var matchingConvention = conventions
+            .Where(convention => typeName.EndsWith(convention.Suffix, StringComparison.Ordinal))
+            .OrderByDescending(convention => convention.Suffix.Length)
+            .FirstOrDefault();
+
+        if (matchingConvention is not null
+            && !_modelDirectoryRuleService.IsTypeInExpectedFolder(filePath, matchingConvention.Folder))
         {
-            if (!typeName.EndsWith(convention.Suffix, StringComparison.Ordinal))
-            {
-                continue;
-            }
-
-            if (!_modelDirectoryRuleService.IsTypeInExpectedFolder(filePath, convention.Folder))
-            {
-                context.ReportDiagnostic(Diagnostic.Create(
-                    DirectoryRule,
-                    declaration.Identifier.GetLocation(),
-                    typeName,
-                    convention.Suffix,
-                    convention.Folder.Replace(Path.DirectorySeparatorChar, '/')));
-            }
-
-            break;
+            context.ReportDiagnostic(Diagnostic.Create(
+                DirectoryRule,
+                declaration.Identifier.GetLocation(),
+                typeName,
+                matchingConvention.Suffix,
+                matchingConvention.Folder.Replace(Path.DirectorySeparatorChar, '/')));
         }
 
         var folderRules = _modelFolderRuleService.ReadFolderRules(options);

@@ -54,6 +54,23 @@ public sealed class ModelDirectoryAnalyzerTests
         Assert.DoesNotContain(diagnostics, d => d.Id == ModelDirectoryAnalyzer.DiagnosticId);
     }
 
+    [Fact]
+    public async Task ReportsBusinessModelWhenGenericConventionWouldOtherwiseMatch()
+    {
+        const string source = "public class CustomerBusinessModel { }";
+
+        var diagnostics = await ArchitectureAnalyzerTestRunner.AnalyzeAsync(
+            source,
+            new ModelDirectoryAnalyzer(),
+            "Models/Common/CustomerBusinessModel.cs",
+            new Dictionary<string, string>
+            {
+                ["architecture_analyzer.model_conventions"] = "Model=Models/Common;BusinessModel=Models/Business",
+            });
+
+        Assert.Contains(diagnostics, d => d.Id == ModelDirectoryAnalyzer.DiagnosticId);
+    }
+
     [Theory]
     [InlineData("Models/Business")]
     [InlineData("Models>Business")]

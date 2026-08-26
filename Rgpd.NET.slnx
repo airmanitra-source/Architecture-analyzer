@@ -1,6 +1,4 @@
 <Solution>
-  <Project Path="Architecture.Analyzer.Tests/Architecture.Analyzer.Tests.csproj" />
-  <Project Path="Architecture.Analyzer/Architecture.Analyzer.csproj" Id="f2f56d5b-7019-40b4-91b9-26ac66af267b" />
   <Project Path="Architecture.Rules.Demo/Architecture.Rules.Demo.csproj" Id="8109abce-4240-43d7-a16b-73f9a0623ffa" />
   <Project Path="HR.Module/HR.Module.csproj" Id="8e2e6785-ceb0-4c3d-8d55-5b532783411e" />
   <Project Path="Rgpd.Analyzer.Tests/Rgpd.Analyzer.Tests.csproj" />

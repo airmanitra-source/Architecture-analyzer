@@ -11,6 +11,14 @@
     <NoPackageAnalysis>true</NoPackageAnalysis>
     <PackageId>Architecture.Analyzer</PackageId>
     <Version>1.0.0</Version>
+    <Authors>Herimanitra</Authors>
+    <Description>Roslyn analyzers for enforcing architecture and naming conventions in .NET solutions.</Description>
+    <PackageTags>roslyn;analyzer;architecture;dotnet</PackageTags>
+    <RepositoryType>git</RepositoryType>
+    <RepositoryUrl>https://github.com/airmanitra-source/Architecture-analyzer</RepositoryUrl>
+    <PackageProjectUrl>https://github.com/airmanitra-source/Architecture-analyzer</PackageProjectUrl>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageLicenseFile>LICENSE.txt</PackageLicenseFile>
   </PropertyGroup>
 
   <ItemGroup>
@@ -19,6 +27,8 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Include="README.md" Pack="true" PackagePath="" Visible="false" />
+    <None Include="LICENSE.txt" Pack="true" PackagePath="" Visible="false" />
     <None Include="Architecture.Analyzer.editorconfig" Pack="true" PackagePath="contentFiles\any\any\.editorconfig" Link=".editorconfig" Visible="false" />
   </ItemGroup>
 

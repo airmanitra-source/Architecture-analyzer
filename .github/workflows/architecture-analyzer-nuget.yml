@@ -1,0 +1,47 @@
+name: Architecture.Analyzer NuGet
+
+on:
+  push:
+    tags:
+      - 'analyzer-v*'
+  workflow_dispatch:
+
+jobs:
+  build-and-publish:
+    runs-on: ubuntu-latest
+
+    permissions:
+      id-token: write
+      contents: read
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Extract version from tag
+        if: startsWith(github.ref, 'refs/tags/analyzer-v')
+        run: echo "VERSION=${GITHUB_REF#refs/tags/analyzer-v}" >> $GITHUB_ENV
+
+      - name: Restore
+        run: dotnet restore Architecture.Analyzers.slnx
+
+      - name: Build
+        run: dotnet build Architecture.Analyzers.slnx -c Release --no-restore -p:Version=${VERSION:-1.0.0}
+
+      - name: Test
+        run: dotnet test Architecture.Analyzers.slnx -c Release --no-build
+
+      - name: Login to NuGet (trusted publishing)
+        if: startsWith(github.ref, 'refs/tags/analyzer-v')
+        uses: nuget/login@v1
+        id: nuget-login
+        with:
+          user: airmanitra-source
+
+      - name: Push to NuGet
+        if: startsWith(github.ref, 'refs/tags/analyzer-v')
+        run: dotnet nuget push Architecture.Analyzer/bin/Release/*.nupkg --api-key ${{ steps.nuget-login.outputs.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json --skip-duplicate
