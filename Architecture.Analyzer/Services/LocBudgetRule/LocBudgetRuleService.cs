@@ -19,6 +19,8 @@ internal sealed class LocBudgetRuleService : ILocBudgetRuleService
     private const string GlobalPercentOption = AnalyzerConfigPrefix + "loc_budget_percent_global";
     private const string MaxClassLinesOption = AnalyzerConfigPrefix + "loc_max_lines_per_class";
     private const string MaxMethodLinesOption = AnalyzerConfigPrefix + "loc_max_lines_per_method";
+    private const int DefaultMaxClassLines = 20;
+    private const int DefaultMaxMethodLines = 20;
     private const string CsExtension = ".cs";
 
     public LocBudgetSettings GetSettings(
@@ -26,10 +28,10 @@ internal sealed class LocBudgetRuleService : ILocBudgetRuleService
         AnalyzerConfigOptions options,
         global::System.Threading.CancellationToken cancellationToken)
     {
-        var maxClassLines = GetNullablePositiveIntOption(options, MaxClassLinesOption);
-        var maxMethodLines = GetNullablePositiveIntOption(options, MaxMethodLinesOption);
-        var projectPercent = GetNullablePositiveIntOption(options, ProjectPercentOption);
-        var globalPercent = GetNullablePositiveIntOption(options, GlobalPercentOption);
+        var maxClassLines = GetPositiveIntOption(options, MaxClassLinesOption) ?? DefaultMaxClassLines;
+        var maxMethodLines = GetPositiveIntOption(options, MaxMethodLinesOption) ?? DefaultMaxMethodLines;
+        var projectPercent = GetPositiveIntOption(options, ProjectPercentOption);
+        var globalPercent = GetPositiveIntOption(options, GlobalPercentOption);
 
         if (!projectPercent.HasValue && !globalPercent.HasValue)
         {
@@ -58,10 +60,10 @@ internal sealed class LocBudgetRuleService : ILocBudgetRuleService
     }
 
     public LocBudgetViolation? AnalyzeType(TypeDeclarationSyntax declaration, int maxLines, global::System.Threading.CancellationToken cancellationToken)
-        => AnalyzeDeclaration(declaration.SyntaxTree, declaration.Span, declaration.Identifier.ValueText, "classe", maxLines, cancellationToken, declaration.Identifier.GetLocation());
+        => AnalyzeCurrentDeclaration(declaration.SyntaxTree, declaration.Span, declaration.Identifier.ValueText, "classe", maxLines, cancellationToken, declaration.Identifier.GetLocation());
 
     public LocBudgetViolation? AnalyzeMethod(MethodDeclarationSyntax declaration, int maxLines, global::System.Threading.CancellationToken cancellationToken)
-        => AnalyzeDeclaration(declaration.SyntaxTree, declaration.Span, declaration.Identifier.ValueText, "méthode", maxLines, cancellationToken, declaration.Identifier.GetLocation());
+        => AnalyzeCurrentDeclaration(declaration.SyntaxTree, declaration.Span, declaration.Identifier.ValueText, "méthode", maxLines, cancellationToken, declaration.Identifier.GetLocation());
 
     public LocBudgetViolation? AnalyzeProject(Compilation compilation, int budget, global::System.Threading.CancellationToken cancellationToken)
     {
@@ -112,7 +114,7 @@ internal sealed class LocBudgetRuleService : ILocBudgetRuleService
         return new LocBudgetViolation("solution", compilation.AssemblyName ?? "Solution", addedLines, budget, location);
     }
 
-    private static LocBudgetViolation? AnalyzeDeclaration(
+    private static LocBudgetViolation? AnalyzeCurrentDeclaration(
         SyntaxTree syntaxTree,
         TextSpan span,
         string itemName,
@@ -121,43 +123,16 @@ internal sealed class LocBudgetRuleService : ILocBudgetRuleService
         global::System.Threading.CancellationToken cancellationToken,
         Location location)
     {
-        var filePath = syntaxTree.FilePath;
-        if (string.IsNullOrWhiteSpace(filePath))
-        {
-            return null;
-        }
-
-        var repositoryPath = GetRepositoryPath(filePath);
-        if (repositoryPath is null)
-        {
-            return null;
-        }
-
-        using var repository = new Repository(repositoryPath);
         var currentText = syntaxTree.GetText(cancellationToken);
-        var baselineText = TryGetHeadText(repository, filePath);
-        if (baselineText is null)
-        {
-            var newFileLines = CountNonBlankLines(currentText, GetStartLine(currentText, span), GetEndLine(currentText, span));
-            return newFileLines > maxLines ? new LocBudgetViolation(scopeName, itemName, newFileLines, maxLines, location) : null;
-        }
-
-        if (!HasFileChanged(currentText, baselineText))
-        {
-            return null;
-        }
-
         var startLine = GetStartLine(currentText, span);
         var endLine = GetEndLine(currentText, span);
         var currentLines = CountNonBlankLines(currentText, startLine, endLine);
-        var baselineLines = CountNonBlankLines(baselineText, startLine, endLine);
-        var addedLines = Math.Max(0, currentLines - baselineLines);
-        if (addedLines <= maxLines)
+        if (currentLines <= maxLines)
         {
             return null;
         }
 
-        return new LocBudgetViolation(scopeName, itemName, addedLines, maxLines, location);
+        return new LocBudgetViolation(scopeName, itemName, currentLines, maxLines, location);
     }
 
     private static string? GetRepositoryPath(Compilation compilation)
@@ -402,7 +377,7 @@ internal sealed class LocBudgetRuleService : ILocBudgetRuleService
         return Math.Max(1, budget);
     }
 
-    private static int? GetNullablePositiveIntOption(AnalyzerConfigOptions options, string key)
+    private static int? GetPositiveIntOption(AnalyzerConfigOptions options, string key)
         => TryGetPositiveIntOption(options, key, out var value) ? value : null;
 
     private static bool TryGetPositiveIntOption(AnalyzerConfigOptions options, string key, out int value)

@@ -1,4 +1,3 @@
-using System.Threading;
 using Architecture.Analyzer.Models;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;

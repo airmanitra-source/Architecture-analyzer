@@ -1,4 +1,7 @@
+using System;
 using System.Collections.Immutable;
+using System.IO;
+using System.Linq;
 using Architecture.Analyzer.Services.LocBudgetRule;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
@@ -80,71 +83,87 @@ public sealed class LocBudgetAnalyzer : DiagnosticAnalyzer
 
         context.RegisterCompilationStartAction(startContext =>
         {
-            var settings = _locBudgetRuleService.GetSettings(
-                startContext.Compilation,
-                startContext.Options.AnalyzerConfigOptionsProvider.GlobalOptions,
-                startContext.CancellationToken);
-            if (!settings.HasRules)
+            startContext.RegisterSyntaxNodeAction(
+                nodeContext =>
+                {
+                    var declaration = (TypeDeclarationSyntax)nodeContext.Node;
+                    var settings = _locBudgetRuleService.GetSettings(
+                        startContext.Compilation,
+                        startContext.Options.AnalyzerConfigOptionsProvider.GetOptions(declaration.SyntaxTree),
+                        nodeContext.CancellationToken);
+
+                    if (!settings.MaxClassLines.HasValue)
+                    {
+                        return;
+                    }
+
+                    var violation = _locBudgetRuleService.AnalyzeType(declaration, settings.MaxClassLines.Value, nodeContext.CancellationToken);
+                    if (violation is null)
+                    {
+                        return;
+                    }
+
+                    nodeContext.ReportDiagnostic(Diagnostic.Create(
+                        ClassRule,
+                        violation.Location,
+                        violation.ItemName,
+                        violation.CurrentLines,
+                        violation.AllowedLines));
+                },
+                SyntaxKind.ClassDeclaration,
+                SyntaxKind.RecordDeclaration,
+                SyntaxKind.RecordStructDeclaration);
+
+            startContext.RegisterSyntaxNodeAction(
+                nodeContext =>
+                {
+                    var declaration = (MethodDeclarationSyntax)nodeContext.Node;
+                    var settings = _locBudgetRuleService.GetSettings(
+                        startContext.Compilation,
+                        startContext.Options.AnalyzerConfigOptionsProvider.GetOptions(declaration.SyntaxTree),
+                        nodeContext.CancellationToken);
+
+                    if (!settings.MaxMethodLines.HasValue)
+                    {
+                        return;
+                    }
+
+                    var violation = _locBudgetRuleService.AnalyzeMethod(declaration, settings.MaxMethodLines.Value, nodeContext.CancellationToken);
+                    if (violation is null)
+                    {
+                        return;
+                    }
+
+                    nodeContext.ReportDiagnostic(Diagnostic.Create(
+                        MethodRule,
+                        violation.Location,
+                        violation.ItemName,
+                        violation.CurrentLines,
+                        violation.AllowedLines));
+                },
+                SyntaxKind.MethodDeclaration);
+
+            var syntaxTree = startContext.Compilation.SyntaxTrees.FirstOrDefault(IsUserSourceTree);
+            if (syntaxTree is null)
             {
                 return;
             }
 
-            if (settings.MaxClassLines.HasValue)
-            {
-                startContext.RegisterSyntaxNodeAction(
-                    nodeContext =>
-                    {
-                        var declaration = (TypeDeclarationSyntax)nodeContext.Node;
-                        var violation = _locBudgetRuleService.AnalyzeType(declaration, settings.MaxClassLines.Value, nodeContext.CancellationToken);
-                        if (violation is null)
-                        {
-                            return;
-                        }
+            var settingsForCompilation = _locBudgetRuleService.GetSettings(
+                startContext.Compilation,
+                startContext.Options.AnalyzerConfigOptionsProvider.GetOptions(syntaxTree),
+                startContext.CancellationToken);
 
-                        nodeContext.ReportDiagnostic(Diagnostic.Create(
-                            ClassRule,
-                            violation.Location,
-                            violation.ItemName,
-                            violation.CurrentLines,
-                            violation.AllowedLines));
-                    },
-                    SyntaxKind.ClassDeclaration,
-                    SyntaxKind.RecordDeclaration,
-                    SyntaxKind.RecordStructDeclaration);
-            }
-
-            if (settings.MaxMethodLines.HasValue)
-            {
-                startContext.RegisterSyntaxNodeAction(
-                    nodeContext =>
-                    {
-                        var declaration = (MethodDeclarationSyntax)nodeContext.Node;
-                        var violation = _locBudgetRuleService.AnalyzeMethod(declaration, settings.MaxMethodLines.Value, nodeContext.CancellationToken);
-                        if (violation is null)
-                        {
-                            return;
-                        }
-
-                        nodeContext.ReportDiagnostic(Diagnostic.Create(
-                            MethodRule,
-                            violation.Location,
-                            violation.ItemName,
-                            violation.CurrentLines,
-                            violation.AllowedLines));
-                    },
-                    SyntaxKind.MethodDeclaration);
-            }
-
-            if (!settings.ProjectBudget.HasValue && !settings.GlobalBudget.HasValue)
+            if (!settingsForCompilation.ProjectBudget.HasValue && !settingsForCompilation.GlobalBudget.HasValue)
             {
                 return;
             }
 
             startContext.RegisterCompilationEndAction(endContext =>
             {
-                if (settings.ProjectBudget.HasValue)
+                if (settingsForCompilation.ProjectBudget.HasValue)
                 {
-                    var projectViolation = _locBudgetRuleService.AnalyzeProject(endContext.Compilation, settings.ProjectBudget.Value, endContext.CancellationToken);
+                    var projectViolation = _locBudgetRuleService.AnalyzeProject(endContext.Compilation, settingsForCompilation.ProjectBudget.Value, endContext.CancellationToken);
                     if (projectViolation is not null)
                     {
                         endContext.ReportDiagnostic(Diagnostic.Create(
@@ -156,9 +175,9 @@ public sealed class LocBudgetAnalyzer : DiagnosticAnalyzer
                     }
                 }
 
-                if (settings.GlobalBudget.HasValue)
+                if (settingsForCompilation.GlobalBudget.HasValue)
                 {
-                    var globalViolation = _locBudgetRuleService.AnalyzeGlobal(endContext.Compilation, settings.GlobalBudget.Value, endContext.CancellationToken);
+                    var globalViolation = _locBudgetRuleService.AnalyzeGlobal(endContext.Compilation, settingsForCompilation.GlobalBudget.Value, endContext.CancellationToken);
                     if (globalViolation is not null)
                     {
                         endContext.ReportDiagnostic(Diagnostic.Create(
@@ -171,5 +190,14 @@ public sealed class LocBudgetAnalyzer : DiagnosticAnalyzer
                 }
             });
         });
+    }
+
+    private static bool IsUserSourceTree(SyntaxTree syntaxTree)
+    {
+        var filePath = syntaxTree.FilePath;
+        return !string.IsNullOrWhiteSpace(filePath)
+               && filePath.EndsWith(".cs", StringComparison.OrdinalIgnoreCase)
+               && filePath.IndexOf($"{Path.DirectorySeparatorChar}obj{Path.DirectorySeparatorChar}", StringComparison.OrdinalIgnoreCase) < 0
+               && filePath.IndexOf($"{Path.AltDirectorySeparatorChar}obj{Path.AltDirectorySeparatorChar}", StringComparison.OrdinalIgnoreCase) < 0;
     }
 }

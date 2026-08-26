@@ -97,6 +97,70 @@ public sealed class LocBudgetAnalyzerTests
     }
 
     [Fact]
+    public async Task ReportsDiagnosticOnActualHrModuleFile()
+    {
+        var source = await File.ReadAllTextAsync(@"D:\rgpd\HR.Module\HrModule.cs");
+
+        var diagnostics = await ArchitectureAnalyzerTestRunner.AnalyzeAsync(
+            source,
+            new LocBudgetAnalyzer(),
+            @"D:\rgpd\HR.Module\HrModule.cs");
+
+        Assert.Contains(diagnostics, diagnostic => diagnostic.Id == LocBudgetAnalyzer.MethodDiagnosticId);
+    }
+
+    [Fact]
+    public async Task ReportsDiagnosticWhenMethodExceedsHardLimitWithoutConfiguration()
+    {
+        var statements = string.Join("\n", Enumerable.Range(1, 30).Select(index => $"        var value{index} = {index};"));
+        var source = $"namespace Architecture.Rules.Demo;\n\npublic class TestBusiness\n{{\n    public void Run()\n    {{\n{statements}\n    }}\n}}\n";
+
+        await using var fixture = await LocBudgetRepositoryFixture.CreateAsync(
+            baselineFiles: new Dictionary<string, string>
+            {
+                ["Seed.cs"] = LocBudgetRepositoryFixture.CreateSeedSource(1000),
+                ["TestBusiness.cs"] = source
+            },
+            currentFiles: new Dictionary<string, string>
+            {
+                ["Seed.cs"] = LocBudgetRepositoryFixture.CreateSeedSource(1000),
+                ["TestBusiness.cs"] = source
+            });
+
+        var diagnostics = await fixture.AnalyzeAsync(new LocBudgetAnalyzer());
+
+        Assert.Contains(diagnostics, diagnostic => diagnostic.Id == LocBudgetAnalyzer.MethodDiagnosticId);
+    }
+
+    [Fact]
+    public async Task ReportsDiagnosticWhenMethodExceedsHardLimitEvenWithoutGitDelta()
+    {
+        var statements = string.Join("\n", Enumerable.Range(1, 30).Select(index => $"        var value{index} = {index};"));
+        var source = $"namespace Architecture.Rules.Demo;\n\npublic class TestBusiness\n{{\n    public void Run()\n    {{\n{statements}\n    }}\n}}\n";
+
+        await using var fixture = await LocBudgetRepositoryFixture.CreateAsync(
+            baselineFiles: new Dictionary<string, string>
+            {
+                ["Seed.cs"] = LocBudgetRepositoryFixture.CreateSeedSource(1000),
+                ["TestBusiness.cs"] = source
+            },
+            currentFiles: new Dictionary<string, string>
+            {
+                ["Seed.cs"] = LocBudgetRepositoryFixture.CreateSeedSource(1000),
+                ["TestBusiness.cs"] = source
+            });
+
+        var diagnostics = await fixture.AnalyzeAsync(
+            new LocBudgetAnalyzer(),
+            new Dictionary<string, string>
+            {
+                ["architecture_analyzer.loc_max_lines_per_method"] = "20"
+            });
+
+        Assert.Contains(diagnostics, diagnostic => diagnostic.Id == LocBudgetAnalyzer.MethodDiagnosticId);
+    }
+
+    [Fact]
     public async Task ReportsDiagnosticWhenProjectAddsTooManyLines()
     {
         var currentExtra = string.Join("\n", Enumerable.Range(1, 25).Select(index => $"public class Generated{index} {{ }}"));

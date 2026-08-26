@@ -7,15 +7,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Architecture.Analyzer\Architecture.Analyzer.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <EditorConfigFiles Remove="D:\rgpd\HR.Module\.editorconfig" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <None Include="D:\rgpd\HR.Module\.editorconfig" />
+    <PackageReference Include="Architecture.Analyzer" Version="1.0.0" PrivateAssets="all" />
   </ItemGroup>
 
 </Project>

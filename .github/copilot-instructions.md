@@ -7,4 +7,4 @@
 - Dans ce dépôt, un fichier doit contenir une seule classe, enum ou record, et le nom du fichier doit correspondre au nom de la classe, de l'enum ou du record qu'il contient.
 - Dans ce dépôt, les méthodes privées dans les analyseurs doivent être extraites en contrats de services injectables pour éviter de polluer l’analyseur.
 - Dans ce dépôt, les services et leurs contrats doivent être placés dans un dossier Services.
-- Dans ce dépôt, l’analyseur LOC doit avoir des pourcentages séparés par projet et au global, ainsi que des limites distinctes par classe et par méthode.
+- Dans ce dépôt, l’analyseur LOC doit avoir des pourcentages séparés par projet et au global, ainsi que des limites distinctes par classe et par méthode. La limite LOC par classe et par méthode est une règle stricte qui ne doit pas dépendre de l’historique Git ; seuls les budgets projet/global peuvent dépendre de Git.
