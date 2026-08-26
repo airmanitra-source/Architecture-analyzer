@@ -1,69 +1,31 @@
-using System.Globalization;
 using Architecture.Analyzer;
-using LibGit2Sharp;
-using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.Diagnostics;
 
 namespace Architecture.Analyzer.Tests;
 
 public sealed class LocBudgetAnalyzerTests
 {
-    [Fact]
-    public async Task DoesNotReportWhenRepositoryHasNoChanges()
-    {
-        await using var fixture = await LocBudgetRepositoryFixture.CreateAsync(
-            baselineFiles: new Dictionary<string, string>
-            {
-                ["Seed.cs"] = LocBudgetRepositoryFixture.CreateSeedSource(1000),
-                ["TestBusiness.cs"] = "namespace Architecture.Rules.Demo;\n\npublic class TestBusiness\n{\n}\n"
-            },
-            currentFiles: new Dictionary<string, string>
-            {
-                ["Seed.cs"] = LocBudgetRepositoryFixture.CreateSeedSource(1000),
-                ["TestBusiness.cs"] = "namespace Architecture.Rules.Demo;\n\npublic class TestBusiness\n{\n}\n"
-            });
+    private const string ProjectPercent = "architecture_analyzer.loc_budget_percent_project";
+    private const string GlobalPercent = "architecture_analyzer.loc_budget_percent_global";
+    private const string MaxClassLines = "architecture_analyzer.loc_max_lines_per_class";
+    private const string MaxMethodLines = "architecture_analyzer.loc_max_lines_per_method";
+    private const string ProjectAdded = "build_property.ArchitectureLocProjectAddedLines";
+    private const string ProjectBaseline = "build_property.ArchitectureLocProjectBaselineLines";
+    private const string SolutionAdded = "build_property.ArchitectureLocSolutionAddedLines";
+    private const string SolutionBaseline = "build_property.ArchitectureLocSolutionBaselineLines";
 
-        var diagnostics = await fixture.AnalyzeAsync(
-            new LocBudgetAnalyzer(),
-            new Dictionary<string, string>
-            {
-                ["architecture_analyzer.loc_budget_percent_project"] = "2",
-                ["architecture_analyzer.loc_budget_percent_global"] = "2",
-                ["architecture_analyzer.loc_max_lines_per_class"] = "20",
-                ["architecture_analyzer.loc_max_lines_per_method"] = "20"
-            });
-
-        Assert.DoesNotContain(diagnostics, diagnostic =>
-            diagnostic.Id is LocBudgetAnalyzer.ClassDiagnosticId
-                or LocBudgetAnalyzer.MethodDiagnosticId
-                or LocBudgetAnalyzer.ProjectDiagnosticId
-                or LocBudgetAnalyzer.SolutionDiagnosticId);
-    }
+    private const string TinySource = "namespace Architecture.Rules.Demo;\n\npublic class TestBusiness\n{\n    public void Run()\n    {\n    }\n}\n";
 
     [Fact]
     public async Task ReportsDiagnosticWhenClassAddsTooManyLines()
     {
-        var currentClass = string.Join("\n", Enumerable.Range(1, 30).Select(index => $"    public int Value{index} {{ get; set; }}"));
-        var currentSource = $"namespace Architecture.Rules.Demo;\n\npublic class TestBusiness\n{{\n{currentClass}\n}}\n";
+        var members = string.Join("\n", Enumerable.Range(1, 30).Select(index => $"    public int Value{index} {{ get; set; }}"));
+        var source = $"namespace Architecture.Rules.Demo;\n\npublic class TestBusiness\n{{\n{members}\n}}\n";
 
-        await using var fixture = await LocBudgetRepositoryFixture.CreateAsync(
-            baselineFiles: new Dictionary<string, string>
-            {
-                ["Seed.cs"] = LocBudgetRepositoryFixture.CreateSeedSource(1000),
-                ["TestBusiness.cs"] = "namespace Architecture.Rules.Demo;\n\npublic class TestBusiness\n{\n}\n"
-            },
-            currentFiles: new Dictionary<string, string>
-            {
-                ["Seed.cs"] = LocBudgetRepositoryFixture.CreateSeedSource(1000),
-                ["TestBusiness.cs"] = currentSource
-            });
-
-        var diagnostics = await fixture.AnalyzeAsync(
+        var diagnostics = await ArchitectureAnalyzerTestRunner.AnalyzeAsync(
+            source,
             new LocBudgetAnalyzer(),
-            new Dictionary<string, string>
-            {
-                ["architecture_analyzer.loc_max_lines_per_class"] = "20"
-            });
+            "TestBusiness.cs",
+            new Dictionary<string, string> { [MaxClassLines] = "20" });
 
         Assert.Contains(diagnostics, diagnostic => diagnostic.Id == LocBudgetAnalyzer.ClassDiagnosticId);
     }
@@ -71,40 +33,14 @@ public sealed class LocBudgetAnalyzerTests
     [Fact]
     public async Task ReportsDiagnosticWhenMethodAddsTooManyLines()
     {
-        var currentStatements = string.Join("\n", Enumerable.Range(1, 30).Select(index => $"        var value{index} = {index};"));
-        var currentSource = $"namespace Architecture.Rules.Demo;\n\npublic class TestBusiness\n{{\n    public void Run()\n    {{\n{currentStatements}\n    }}\n}}\n";
-
-        await using var fixture = await LocBudgetRepositoryFixture.CreateAsync(
-            baselineFiles: new Dictionary<string, string>
-            {
-                ["Seed.cs"] = LocBudgetRepositoryFixture.CreateSeedSource(1000),
-                ["TestBusiness.cs"] = "namespace Architecture.Rules.Demo;\n\npublic class TestBusiness\n{\n    public void Run()\n    {\n    }\n}\n"
-            },
-            currentFiles: new Dictionary<string, string>
-            {
-                ["Seed.cs"] = LocBudgetRepositoryFixture.CreateSeedSource(1000),
-                ["TestBusiness.cs"] = currentSource
-            });
-
-        var diagnostics = await fixture.AnalyzeAsync(
-            new LocBudgetAnalyzer(),
-            new Dictionary<string, string>
-            {
-                ["architecture_analyzer.loc_max_lines_per_method"] = "20"
-            });
-
-        Assert.Contains(diagnostics, diagnostic => diagnostic.Id == LocBudgetAnalyzer.MethodDiagnosticId);
-    }
-
-    [Fact]
-    public async Task ReportsDiagnosticOnActualHrModuleFile()
-    {
-        var source = await File.ReadAllTextAsync(@"D:\rgpd\HR.Module\HrModule.cs");
+        var statements = string.Join("\n", Enumerable.Range(1, 30).Select(index => $"        var value{index} = {index};"));
+        var source = $"namespace Architecture.Rules.Demo;\n\npublic class TestBusiness\n{{\n    public void Run()\n    {{\n{statements}\n    }}\n}}\n";
 
         var diagnostics = await ArchitectureAnalyzerTestRunner.AnalyzeAsync(
             source,
             new LocBudgetAnalyzer(),
-            @"D:\rgpd\HR.Module\HrModule.cs");
+            "TestBusiness.cs",
+            new Dictionary<string, string> { [MaxMethodLines] = "20" });
 
         Assert.Contains(diagnostics, diagnostic => diagnostic.Id == LocBudgetAnalyzer.MethodDiagnosticId);
     }
@@ -115,192 +51,106 @@ public sealed class LocBudgetAnalyzerTests
         var statements = string.Join("\n", Enumerable.Range(1, 30).Select(index => $"        var value{index} = {index};"));
         var source = $"namespace Architecture.Rules.Demo;\n\npublic class TestBusiness\n{{\n    public void Run()\n    {{\n{statements}\n    }}\n}}\n";
 
-        await using var fixture = await LocBudgetRepositoryFixture.CreateAsync(
-            baselineFiles: new Dictionary<string, string>
-            {
-                ["Seed.cs"] = LocBudgetRepositoryFixture.CreateSeedSource(1000),
-                ["TestBusiness.cs"] = source
-            },
-            currentFiles: new Dictionary<string, string>
-            {
-                ["Seed.cs"] = LocBudgetRepositoryFixture.CreateSeedSource(1000),
-                ["TestBusiness.cs"] = source
-            });
-
-        var diagnostics = await fixture.AnalyzeAsync(new LocBudgetAnalyzer());
+        var diagnostics = await ArchitectureAnalyzerTestRunner.AnalyzeAsync(source, new LocBudgetAnalyzer(), "TestBusiness.cs");
 
         Assert.Contains(diagnostics, diagnostic => diagnostic.Id == LocBudgetAnalyzer.MethodDiagnosticId);
     }
 
     [Fact]
-    public async Task ReportsDiagnosticWhenMethodExceedsHardLimitEvenWithoutGitDelta()
+    public async Task DoesNotReportBudgetWhenNoLinesWereAdded()
     {
-        var statements = string.Join("\n", Enumerable.Range(1, 30).Select(index => $"        var value{index} = {index};"));
-        var source = $"namespace Architecture.Rules.Demo;\n\npublic class TestBusiness\n{{\n    public void Run()\n    {{\n{statements}\n    }}\n}}\n";
-
-        await using var fixture = await LocBudgetRepositoryFixture.CreateAsync(
-            baselineFiles: new Dictionary<string, string>
-            {
-                ["Seed.cs"] = LocBudgetRepositoryFixture.CreateSeedSource(1000),
-                ["TestBusiness.cs"] = source
-            },
-            currentFiles: new Dictionary<string, string>
-            {
-                ["Seed.cs"] = LocBudgetRepositoryFixture.CreateSeedSource(1000),
-                ["TestBusiness.cs"] = source
-            });
-
-        var diagnostics = await fixture.AnalyzeAsync(
+        var diagnostics = await ArchitectureAnalyzerTestRunner.AnalyzeAsync(
+            TinySource,
             new LocBudgetAnalyzer(),
+            "TestBusiness.cs",
             new Dictionary<string, string>
             {
-                ["architecture_analyzer.loc_max_lines_per_method"] = "20"
+                [ProjectPercent] = "2",
+                [GlobalPercent] = "2",
+                [ProjectBaseline] = "1000",
+                [SolutionBaseline] = "1000",
+                [ProjectAdded] = "0",
+                [SolutionAdded] = "0"
             });
 
-        Assert.Contains(diagnostics, diagnostic => diagnostic.Id == LocBudgetAnalyzer.MethodDiagnosticId);
+        Assert.DoesNotContain(diagnostics, diagnostic =>
+            diagnostic.Id is LocBudgetAnalyzer.ProjectDiagnosticId or LocBudgetAnalyzer.SolutionDiagnosticId);
     }
 
     [Fact]
     public async Task ReportsDiagnosticWhenProjectAddsTooManyLines()
     {
-        var currentExtra = string.Join("\n", Enumerable.Range(1, 25).Select(index => $"public class Generated{index} {{ }}"));
-
-        await using var fixture = await LocBudgetRepositoryFixture.CreateAsync(
-            baselineFiles: new Dictionary<string, string>
-            {
-                ["Seed.cs"] = LocBudgetRepositoryFixture.CreateSeedSource(1000),
-                ["TestBusiness.cs"] = "namespace Architecture.Rules.Demo;\n\npublic class TestBusiness\n{\n}\n"
-            },
-            currentFiles: new Dictionary<string, string>
-            {
-                ["Seed.cs"] = LocBudgetRepositoryFixture.CreateSeedSource(1000),
-                ["TestBusiness.cs"] = "namespace Architecture.Rules.Demo;\n\npublic class TestBusiness\n{\n}\n",
-                ["Generated.cs"] = currentExtra
-            });
-
-        var diagnostics = await fixture.AnalyzeAsync(
+        // budget = ceil(1000 * 2%) = 20; added 30 exceeds it.
+        var diagnostics = await ArchitectureAnalyzerTestRunner.AnalyzeAsync(
+            TinySource,
             new LocBudgetAnalyzer(),
+            "TestBusiness.cs",
             new Dictionary<string, string>
             {
-                ["architecture_analyzer.loc_budget_percent_project"] = "2"
+                [ProjectPercent] = "2",
+                [ProjectBaseline] = "1000",
+                [ProjectAdded] = "30"
             });
 
         Assert.Contains(diagnostics, diagnostic => diagnostic.Id == LocBudgetAnalyzer.ProjectDiagnosticId);
     }
 
     [Fact]
-    public async Task ReportsDiagnosticWhenGlobalBudgetIsLowerThanProjectBudget()
+    public async Task DoesNotReportProjectWhenAddedLinesAreWithinBudget()
     {
-        var currentExtra = string.Join("\n", Enumerable.Range(1, 25).Select(index => $"public class Generated{index} {{ }}"));
-
-        await using var fixture = await LocBudgetRepositoryFixture.CreateAsync(
-            baselineFiles: new Dictionary<string, string>
-            {
-                ["Seed.cs"] = LocBudgetRepositoryFixture.CreateSeedSource(1000),
-                ["TestBusiness.cs"] = "namespace Architecture.Rules.Demo;\n\npublic class TestBusiness\n{\n}\n"
-            },
-            currentFiles: new Dictionary<string, string>
-            {
-                ["Seed.cs"] = LocBudgetRepositoryFixture.CreateSeedSource(1000),
-                ["TestBusiness.cs"] = "namespace Architecture.Rules.Demo;\n\npublic class TestBusiness\n{\n}\n",
-                ["Generated.cs"] = currentExtra
-            });
-
-        var diagnostics = await fixture.AnalyzeAsync(
+        // budget = ceil(1000 * 2%) = 20; added 10 stays within it.
+        var diagnostics = await ArchitectureAnalyzerTestRunner.AnalyzeAsync(
+            TinySource,
             new LocBudgetAnalyzer(),
+            "TestBusiness.cs",
             new Dictionary<string, string>
             {
-                ["architecture_analyzer.loc_budget_percent_project"] = "3",
-                ["architecture_analyzer.loc_budget_percent_global"] = "2"
+                [ProjectPercent] = "2",
+                [ProjectBaseline] = "1000",
+                [ProjectAdded] = "10"
+            });
+
+        Assert.DoesNotContain(diagnostics, diagnostic => diagnostic.Id == LocBudgetAnalyzer.ProjectDiagnosticId);
+    }
+
+    [Fact]
+    public async Task ReportsDiagnosticWhenSolutionAddsTooManyLines()
+    {
+        // budget = ceil(1000 * 2%) = 20; added 30 exceeds it.
+        var diagnostics = await ArchitectureAnalyzerTestRunner.AnalyzeAsync(
+            TinySource,
+            new LocBudgetAnalyzer(),
+            "TestBusiness.cs",
+            new Dictionary<string, string>
+            {
+                [GlobalPercent] = "2",
+                [SolutionBaseline] = "1000",
+                [SolutionAdded] = "30"
+            });
+
+        Assert.Contains(diagnostics, diagnostic => diagnostic.Id == LocBudgetAnalyzer.SolutionDiagnosticId);
+    }
+
+    [Fact]
+    public async Task ReportsSolutionButNotProjectWhenGlobalBudgetIsStricter()
+    {
+        // project budget = ceil(1000 * 3%) = 30, added 25 -> within budget.
+        // solution budget = ceil(1000 * 2%) = 20, added 25 -> exceeds budget.
+        var diagnostics = await ArchitectureAnalyzerTestRunner.AnalyzeAsync(
+            TinySource,
+            new LocBudgetAnalyzer(),
+            "TestBusiness.cs",
+            new Dictionary<string, string>
+            {
+                [ProjectPercent] = "3",
+                [GlobalPercent] = "2",
+                [ProjectBaseline] = "1000",
+                [SolutionBaseline] = "1000",
+                [ProjectAdded] = "25",
+                [SolutionAdded] = "25"
             });
 
         Assert.DoesNotContain(diagnostics, diagnostic => diagnostic.Id == LocBudgetAnalyzer.ProjectDiagnosticId);
         Assert.Contains(diagnostics, diagnostic => diagnostic.Id == LocBudgetAnalyzer.SolutionDiagnosticId);
-    }
-
-    private sealed class LocBudgetRepositoryFixture : IAsyncDisposable
-    {
-        private readonly string _rootDirectory;
-
-        private LocBudgetRepositoryFixture(string rootDirectory)
-        {
-            _rootDirectory = rootDirectory;
-        }
-
-        public static async Task<LocBudgetRepositoryFixture> CreateAsync(
-            IReadOnlyDictionary<string, string> baselineFiles,
-            IReadOnlyDictionary<string, string> currentFiles)
-        {
-            var rootDirectory = Path.Combine(Path.GetTempPath(), "rgpd-loc-" + Guid.NewGuid().ToString("N", CultureInfo.InvariantCulture));
-            Directory.CreateDirectory(rootDirectory);
-            Repository.Init(rootDirectory);
-
-            using (var repository = new Repository(rootDirectory))
-            {
-                foreach (var (relativePath, content) in baselineFiles)
-                {
-                    var fullPath = Path.Combine(rootDirectory, relativePath);
-                    var directory = Path.GetDirectoryName(fullPath);
-                    if (!string.IsNullOrWhiteSpace(directory))
-                    {
-                        Directory.CreateDirectory(directory);
-                    }
-
-                    await File.WriteAllTextAsync(fullPath, content);
-                }
-
-                Commands.Stage(repository, "*");
-                repository.Commit(
-                    "baseline",
-                    new Signature("Copilot", "copilot@example.com", DateTimeOffset.UtcNow),
-                    new Signature("Copilot", "copilot@example.com", DateTimeOffset.UtcNow));
-            }
-
-            foreach (var (relativePath, content) in currentFiles)
-            {
-                var fullPath = Path.Combine(rootDirectory, relativePath);
-                var directory = Path.GetDirectoryName(fullPath);
-                if (!string.IsNullOrWhiteSpace(directory))
-                {
-                    Directory.CreateDirectory(directory);
-                }
-
-                await File.WriteAllTextAsync(fullPath, content);
-            }
-
-            return new LocBudgetRepositoryFixture(rootDirectory);
-        }
-
-        public async Task<List<Diagnostic>> AnalyzeAsync(
-            DiagnosticAnalyzer analyzer,
-            IReadOnlyDictionary<string, string>? analyzerConfigOptions = null)
-        {
-            var documents = new List<(string filePath, string source)>();
-            foreach (var filePath in Directory.GetFiles(_rootDirectory, "*.cs", SearchOption.AllDirectories))
-            {
-                documents.Add((filePath, await File.ReadAllTextAsync(filePath)));
-            }
-
-            return await ArchitectureAnalyzerTestRunner.AnalyzeAsync(documents, analyzer, "Architecture.Rules.Demo", analyzerConfigOptions);
-        }
-
-        public ValueTask DisposeAsync()
-        {
-            try
-            {
-                if (Directory.Exists(_rootDirectory))
-                {
-                    Directory.Delete(_rootDirectory, true);
-                }
-            }
-            catch
-            {
-            }
-
-            return ValueTask.CompletedTask;
-        }
-
-        public static string CreateSeedSource(int lines)
-            => string.Join("\n", Enumerable.Range(1, lines).Select(index => $"public sealed class Seed{index} {{ }}"));
     }
 }

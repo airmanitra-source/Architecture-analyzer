@@ -16,8 +16,6 @@
   <ItemGroup>
     <PackageReference Include="Microsoft.CodeAnalysis.Analyzers" Version="3.11.0" PrivateAssets="all" />
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.11.0" PrivateAssets="all" />
-    <PackageReference Include="LibGit2Sharp" Version="0.31.0" PrivateAssets="all" GeneratePathProperty="true" />
-    <PackageReference Include="LibGit2Sharp.NativeBinaries" Version="2.0.323" PrivateAssets="all" GeneratePathProperty="true" />
   </ItemGroup>
 
   <ItemGroup>
@@ -28,9 +26,9 @@
     <!-- The analyzer assembly itself. -->
     <None Include="$(OutputPath)$(AssemblyName).dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
 
-    <!-- LibGit2Sharp must ship next to the analyzer so Roslyn's assembly loader can resolve it;
-         its native binaries must sit under runtimes/<rid>/native relative to the managed DLL. -->
-    <None Include="$(PkgLibGit2Sharp)\lib\net8.0\LibGit2Sharp.dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
-    <None Include="$(PkgLibGit2Sharp_NativeBinaries)\runtimes\**\*.*" Pack="true" PackagePath="analyzers/dotnet/cs/runtimes" Visible="false" />
+    <!-- MSBuild targets that compute the LOC budget inputs from the git CLI at build time.
+         Shipped in both build/ and buildTransitive/ so the target runs in consuming projects. -->
+    <None Include="build\Architecture.Analyzer.targets" Pack="true" PackagePath="build\Architecture.Analyzer.targets" Visible="false" />
+    <None Include="build\Architecture.Analyzer.targets" Pack="true" PackagePath="buildTransitive\Architecture.Analyzer.targets" Visible="false" />
   </ItemGroup>
 </Project>

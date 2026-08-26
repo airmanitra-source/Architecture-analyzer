@@ -1,4 +1,4 @@
-namespace HR.Module.Models.Data.Providers
+namespace HR.Module.Models.Data
 {
     public sealed class EmployeeDataModel
     {

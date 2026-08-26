@@ -1,0 +1,234 @@
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+
+  <!--
+    Computes the "lines of code added since HEAD" budget inputs using the git CLI (no LibGit2Sharp).
+    The numbers are handed to the analyzer through CompilerVisibleProperty, so the analyzer itself
+    stays a pure function of the compilation + options and performs no IO.
+  -->
+
+  <ItemGroup>
+    <CompilerVisibleProperty Include="ArchitectureLocProjectAddedLines" />
+    <CompilerVisibleProperty Include="ArchitectureLocProjectBaselineLines" />
+    <CompilerVisibleProperty Include="ArchitectureLocSolutionAddedLines" />
+    <CompilerVisibleProperty Include="ArchitectureLocSolutionBaselineLines" />
+  </ItemGroup>
+
+  <UsingTask
+    TaskName="Architecture.Analyzer.Build.ComputeLocBudget"
+    TaskFactory="RoslynCodeTaskFactory"
+    AssemblyFile="$(MSBuildToolsPath)\Microsoft.Build.Tasks.Core.dll">
+    <ParameterGroup>
+      <WorkingDirectory ParameterType="System.String" Required="true" />
+      <ProjectFiles ParameterType="System.String" Required="false" />
+      <ProjectAddedLines ParameterType="System.Int32" Output="true" />
+      <ProjectBaselineLines ParameterType="System.Int32" Output="true" />
+      <SolutionAddedLines ParameterType="System.Int32" Output="true" />
+      <SolutionBaselineLines ParameterType="System.Int32" Output="true" />
+    </ParameterGroup>
+    <Task>
+      <Code Type="Class" Language="cs"><![CDATA[
+using System;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.IO;
+using Microsoft.Build.Framework;
+using Microsoft.Build.Utilities;
+
+namespace Architecture.Analyzer.Build
+{
+    public sealed class ComputeLocBudget : Task
+    {
+        public string WorkingDirectory { get; set; }
+        public string ProjectFiles { get; set; }
+
+        [Output] public int ProjectAddedLines { get; set; }
+        [Output] public int ProjectBaselineLines { get; set; }
+        [Output] public int SolutionAddedLines { get; set; }
+        [Output] public int SolutionBaselineLines { get; set; }
+
+        private string _repoRoot;
+
+        public override bool Execute()
+        {
+            try
+            {
+                var root = RunGit("rev-parse --show-toplevel");
+                if (root == null)
+                {
+                    // git missing or not a repository: leave every count at 0 so budgets stay inactive.
+                    return true;
+                }
+
+                root = root.Trim();
+
+                // Run every following command from the repository root so paths are root-relative and the
+                // whole repository is in scope (ls-files defaults to the current directory otherwise).
+                _repoRoot = root;
+
+                var projectFiles = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+                if (!string.IsNullOrEmpty(ProjectFiles))
+                {
+                    foreach (var raw in ProjectFiles.Split(new[] { ';' }, StringSplitOptions.RemoveEmptyEntries))
+                    {
+                        var trimmed = raw.Trim();
+                        if (trimmed.Length != 0)
+                        {
+                            projectFiles.Add(Path.GetFullPath(trimmed));
+                        }
+                    }
+                }
+
+                // Added lines (working tree + index vs HEAD) for tracked .cs files, via numstat.
+                var numstat = RunGit("diff --numstat HEAD -- *.cs");
+                foreach (var line in SplitLines(numstat))
+                {
+                    var columns = line.Split('\t');
+                    if (columns.Length < 3)
+                    {
+                        continue;
+                    }
+
+                    if (!int.TryParse(columns[0], out var added))
+                    {
+                        continue; // "-" marks a binary file.
+                    }
+
+                    var full = ToFullPath(root, columns[2]);
+                    SolutionAddedLines += added;
+                    if (projectFiles.Contains(full))
+                    {
+                        ProjectAddedLines += added;
+                    }
+                }
+
+                // Untracked .cs files count fully as added lines.
+                var untracked = RunGit("ls-files --others --exclude-standard -- *.cs");
+                foreach (var relative in SplitLines(untracked))
+                {
+                    var full = ToFullPath(root, relative);
+                    var added = CountLines(full);
+                    SolutionAddedLines += added;
+                    if (projectFiles.Contains(full))
+                    {
+                        ProjectAddedLines += added;
+                    }
+                }
+
+                // Baseline = size of the existing tracked .cs code base (working copy is a stable proxy
+                // for HEAD; the two differ only by the change being measured, negligible for a percentage).
+                var tracked = RunGit("ls-files -- *.cs");
+                foreach (var relative in SplitLines(tracked))
+                {
+                    var full = ToFullPath(root, relative);
+                    var count = CountLines(full);
+                    SolutionBaselineLines += count;
+                    if (projectFiles.Contains(full))
+                    {
+                        ProjectBaselineLines += count;
+                    }
+                }
+
+                return true;
+            }
+            catch (Exception exception)
+            {
+                // Never fail the build over the budget computation; just log and leave counts at 0.
+                Log.LogMessage(MessageImportance.Low, "Architecture.Analyzer LOC budget computation skipped: " + exception.Message);
+                return true;
+            }
+        }
+
+        private static string ToFullPath(string root, string relative)
+            => Path.GetFullPath(Path.Combine(root, relative.Replace('/', Path.DirectorySeparatorChar)));
+
+        private static int CountLines(string fullPath)
+        {
+            if (!File.Exists(fullPath))
+            {
+                return 0;
+            }
+
+            var count = 0;
+            foreach (var _ in File.ReadLines(fullPath))
+            {
+                count++;
+            }
+
+            return count;
+        }
+
+        private static IEnumerable<string> SplitLines(string value)
+        {
+            if (string.IsNullOrEmpty(value))
+            {
+                yield break;
+            }
+
+            foreach (var line in value.Replace("\r", string.Empty).Split('\n'))
+            {
+                if (line.Length != 0)
+                {
+                    yield return line;
+                }
+            }
+        }
+
+        private string RunGit(string arguments)
+        {
+            // safe.directory=* skips git's ownership check (repos owned by another user on CI/shared boxes);
+            // -C <root> pins every command to the repository root once it is known.
+            var prefix = "-c safe.directory=* ";
+            if (!string.IsNullOrEmpty(_repoRoot))
+            {
+                prefix += "-C \"" + _repoRoot + "\" ";
+            }
+
+            var startInfo = new ProcessStartInfo
+            {
+                FileName = "git",
+                Arguments = prefix + arguments,
+                WorkingDirectory = WorkingDirectory,
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
+                UseShellExecute = false,
+                CreateNoWindow = true,
+            };
+
+            try
+            {
+                using (var process = Process.Start(startInfo))
+                {
+                    if (process == null)
+                    {
+                        return null;
+                    }
+
+                    var output = process.StandardOutput.ReadToEnd();
+                    process.StandardError.ReadToEnd();
+                    process.WaitForExit();
+                    return process.ExitCode == 0 ? output : null;
+                }
+            }
+            catch
+            {
+                return null; // git is not installed or not on PATH.
+            }
+        }
+    }
+}
+      ]]></Code>
+    </Task>
+  </UsingTask>
+
+  <Target Name="_ComputeArchitectureLocBudget" BeforeTargets="GenerateMSBuildEditorConfigFileCore">
+    <ComputeLocBudget
+      WorkingDirectory="$(MSBuildProjectDirectory)"
+      ProjectFiles="@(Compile->'%(FullPath)')">
+      <Output TaskParameter="ProjectAddedLines" PropertyName="ArchitectureLocProjectAddedLines" />
+      <Output TaskParameter="ProjectBaselineLines" PropertyName="ArchitectureLocProjectBaselineLines" />
+      <Output TaskParameter="SolutionAddedLines" PropertyName="ArchitectureLocSolutionAddedLines" />
+      <Output TaskParameter="SolutionBaselineLines" PropertyName="ArchitectureLocSolutionBaselineLines" />
+    </ComputeLocBudget>
+  </Target>
+
+</Project>

@@ -1,3 +1,5 @@
+using HR.Module.Models.Data;
+
 namespace HR.Module.Models.Data.Providers
 {
     public interface IHrProvider

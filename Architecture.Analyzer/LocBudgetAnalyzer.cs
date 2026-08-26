@@ -146,9 +146,8 @@ public sealed class LocBudgetAnalyzer : DiagnosticAnalyzer
             }
 
             var settingsForCompilation = _locBudgetRuleService.GetSettings(
-                startContext.Compilation,
                 startContext.Options.AnalyzerConfigOptionsProvider.GetOptions(syntaxTree),
-                startContext.CancellationToken);
+                startContext.Options.AnalyzerConfigOptionsProvider.GlobalOptions);
 
             if (!settingsForCompilation.ProjectBudget.HasValue && !settingsForCompilation.GlobalBudget.HasValue)
             {
@@ -159,7 +158,7 @@ public sealed class LocBudgetAnalyzer : DiagnosticAnalyzer
             {
                 if (settingsForCompilation.ProjectBudget.HasValue)
                 {
-                    var projectViolation = _locBudgetRuleService.AnalyzeProject(endContext.Compilation, settingsForCompilation.ProjectBudget.Value, endContext.CancellationToken);
+                    var projectViolation = _locBudgetRuleService.GetLocViolationOnProject(endContext.Compilation, settingsForCompilation.ProjectAddedLines, settingsForCompilation.ProjectBudget.Value, endContext.CancellationToken);
                     if (projectViolation is not null)
                     {
                         endContext.ReportDiagnostic(Diagnostic.Create(
@@ -173,7 +172,7 @@ public sealed class LocBudgetAnalyzer : DiagnosticAnalyzer
 
                 if (settingsForCompilation.GlobalBudget.HasValue)
                 {
-                    var globalViolation = _locBudgetRuleService.AnalyzeGlobal(endContext.Compilation, settingsForCompilation.GlobalBudget.Value, endContext.CancellationToken);
+                    var globalViolation = _locBudgetRuleService.GetLocViolationOnGlobal(endContext.Compilation, settingsForCompilation.SolutionAddedLines, settingsForCompilation.GlobalBudget.Value, endContext.CancellationToken);
                     if (globalViolation is not null)
                     {
                         endContext.ReportDiagnostic(Diagnostic.Create(
