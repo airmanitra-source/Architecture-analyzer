@@ -2,7 +2,7 @@ using Architecture.Analyzer;
 
 namespace Architecture.Analyzer.Tests;
 
-public sealed class DtoPropertyOrderAnalyzerTests
+public sealed class ClassPropertyOrderAnalyzerTests
 {
     [Theory]
     [InlineData("public class CustomerBusinessModel { public string Name { get; set; } public string Age { get; set; } }")]
