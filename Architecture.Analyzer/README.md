@@ -1,11 +1,11 @@
-# Architecture.Analyzer
+# Herimanitra.Architecture.Analyzer
 
 Roslyn analyzers for enforcing architecture and naming conventions in .NET solutions.
 
 ## Installation
 
 ```shell
-dotnet add package Architecture.Analyzer
+dotnet add package Herimanitra.Architecture.Analyzer
 ```
 
 ## Analyzers

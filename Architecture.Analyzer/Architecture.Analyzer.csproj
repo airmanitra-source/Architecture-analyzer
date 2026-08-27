@@ -9,8 +9,8 @@
     <IncludeBuildOutput>false</IncludeBuildOutput>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <NoPackageAnalysis>true</NoPackageAnalysis>
-    <PackageId>Architecture.Analyzer</PackageId>
-    <Version>1.0.1</Version>
+    <PackageId>Herimanitra.Architecture.Analyzer</PackageId>
+    <Version>1.0.0</Version>
     <Authors>Herimanitra</Authors>
     <Description>Roslyn analyzers for enforcing architecture and naming conventions in .NET solutions.</Description>
     <PackageTags>roslyn;analyzer;architecture;dotnet</PackageTags>
