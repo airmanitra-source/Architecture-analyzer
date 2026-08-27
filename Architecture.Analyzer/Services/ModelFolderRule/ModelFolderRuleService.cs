@@ -11,6 +11,7 @@ internal sealed class ModelFolderRuleService : IModelFolderRuleService
 {
     private const string AnalyzerConfigPrefix = "architecture_analyzer.";
     private const string ModelFolderAllowedSuffixesOption = AnalyzerConfigPrefix + "model_folder_allowed_suffixes";
+    private char[] FolderSeparator = new[] { ',', '|' };
     private const char RuleSeparator = ';';
     private const string RuleValueSeparator = "=";
 
@@ -33,7 +34,7 @@ internal sealed class ModelFolderRuleService : IModelFolderRuleService
 
             var folder = NormalizeFolder(parts[0]);
             var allowedSuffixes = parts[1]
-                .Split(new[] { ',', '|' }, StringSplitOptions.RemoveEmptyEntries)
+                .Split(FolderSeparator, StringSplitOptions.RemoveEmptyEntries)
                 .Select(suffix => suffix.Trim())
                 .Where(suffix => !string.IsNullOrWhiteSpace(suffix))
                 .ToList();

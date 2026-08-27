@@ -22,12 +22,12 @@ public sealed class ModelDirectoryAnalyzer : DiagnosticAnalyzer
     public const string FileNameDiagnosticId = "ARCH002";
     public const string FolderAllowedDiagnosticId = "ARCH003";
 
-    private const string DirectoryMessageFormat = "Le type '{0}' se termine par '{1}' et doit être dans le dossier '{2}'.";
-    private const string DirectoryTitle = "Type de modèle dans le mauvais dossier";
-    private const string FileNameMessageFormat = "Le type '{0}' doit être déclaré dans un fichier nommé '{1}'.";
-    private const string FileNameTitle = "Le nom du fichier doit correspondre au nom du type";
-    private const string FolderAllowedMessageFormat = "Le type '{0}' n'est pas autorisé dans le dossier '{1}'. Suffixes autorisés : '{2}'.";
-    private const string FolderAllowedTitle = "Type de modèle dans un dossier non autorisé";
+    private static readonly LocalizableString DirectoryMessageFormat = new LocalizableResourceString(nameof(Resources.ModelDirectoryMessageFormat), Resources.ResourceManager, typeof(Resources));
+    private static readonly LocalizableString DirectoryTitle = new LocalizableResourceString(nameof(Resources.ModelDirectoryTitle), Resources.ResourceManager, typeof(Resources));
+    private static readonly LocalizableString FileNameMessageFormat = new LocalizableResourceString(nameof(Resources.ModelFileNameMessageFormat), Resources.ResourceManager, typeof(Resources));
+    private static readonly LocalizableString FileNameTitle = new LocalizableResourceString(nameof(Resources.ModelFileNameTitle), Resources.ResourceManager, typeof(Resources));
+    private static readonly LocalizableString FolderAllowedMessageFormat = new LocalizableResourceString(nameof(Resources.ModelFolderAllowedMessageFormat), Resources.ResourceManager, typeof(Resources));
+    private static readonly LocalizableString FolderAllowedTitle = new LocalizableResourceString(nameof(Resources.ModelFolderAllowedTitle), Resources.ResourceManager, typeof(Resources));
     private const string Category = "Architecture";
 
     private readonly IModelConventionRuleService _modelConventionService;

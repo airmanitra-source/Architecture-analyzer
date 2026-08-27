@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="ClassPropertyOrderTitle" xml:space="preserve">
+    <value>DTO properties are not ordered</value>
+  </data>
+  <data name="ClassPropertyOrderMessageFormat" xml:space="preserve">
+    <value>In '{0}', property '{1}' must be placed before '{2}' because properties must be ordered alphabetically excluding identifiers.</value>
+  </data>
+  <data name="LocBudgetClassTitle" xml:space="preserve">
+    <value>Class exceeds the added-lines budget for the prompt</value>
+  </data>
+  <data name="LocBudgetMethodTitle" xml:space="preserve">
+    <value>Method exceeds the added-lines budget for the prompt</value>
+  </data>
+  <data name="LocBudgetSolutionTitle" xml:space="preserve">
+    <value>Solution exceeds the global added-lines budget for the prompt</value>
+  </data>
+  <data name="LocBudgetProjectTitle" xml:space="preserve">
+    <value>Project exceeds the added-lines budget for the prompt</value>
+  </data>
+  <data name="LocBudgetClassMessageFormat" xml:space="preserve">
+    <value>Class '{0}' adds {1} lines of code and exceeds the {2}-line budget.</value>
+  </data>
+  <data name="LocBudgetMethodMessageFormat" xml:space="preserve">
+    <value>Method '{0}' adds {1} lines of code and exceeds the {2}-line budget.</value>
+  </data>
+  <data name="LocBudgetSolutionMessageFormat" xml:space="preserve">
+    <value>Solution '{0}' adds {1} lines of code and exceeds the global {2}-line budget.</value>
+  </data>
+  <data name="LocBudgetProjectMessageFormat" xml:space="preserve">
+    <value>Project '{0}' adds {1} lines of code and exceeds the {2}-line budget.</value>
+  </data>
+  <data name="ModelDirectoryTitle" xml:space="preserve">
+    <value>Model type in the wrong folder</value>
+  </data>
+  <data name="ModelDirectoryMessageFormat" xml:space="preserve">
+    <value>Type '{0}' ends with '{1}' and must be located in folder '{2}'.</value>
+  </data>
+  <data name="ModelFileNameTitle" xml:space="preserve">
+    <value>File name must match the type name</value>
+  </data>
+  <data name="ModelFileNameMessageFormat" xml:space="preserve">
+    <value>Type '{0}' must be declared in a file named '{1}'.</value>
+  </data>
+  <data name="ModelFolderAllowedTitle" xml:space="preserve">
+    <value>Model type in a disallowed folder</value>
+  </data>
+  <data name="ModelFolderAllowedMessageFormat" xml:space="preserve">
+    <value>Type '{0}' is not allowed in folder '{1}'. Allowed suffixes: '{2}'.</value>
+  </data>
+  <data name="MissingProviderContractsTitle" xml:space="preserve">
+    <value>Missing provider contracts in a module</value>
+  </data>
+  <data name="MissingProviderContractsMessageFormat" xml:space="preserve">
+    <value>Module '{0}' must contain the 'Models/Data/Providers' folder with at least one interface.</value>
+  </data>
+  <data name="LocalProviderImplementationTitle" xml:space="preserve">
+    <value>Provider implementation is not allowed in the module</value>
+  </data>
+  <data name="LocalProviderImplementationMessageFormat" xml:space="preserve">
+    <value>Type '{0}' must not implement the provider interface '{1}' inside module '{2}'.</value>
+  </data>
+</root>

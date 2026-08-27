@@ -14,8 +14,8 @@ public sealed class ClassPropertyOrderAnalyzer : DiagnosticAnalyzer
 {
     public const string DiagnosticId = "ARCH005";
 
-    private const string Title = "Les propriétés du DTO ne sont pas ordonnées";
-    private const string MessageFormat = "Dans '{0}', la propriété '{1}' doit être placée avant '{2}' car les propriétés doivent être ordonnées alphabétiquement hors identifiants.";
+    private static readonly LocalizableString Title = new LocalizableResourceString(nameof(Resources.ClassPropertyOrderTitle), Resources.ResourceManager, typeof(Resources));
+    private static readonly LocalizableString MessageFormat = new LocalizableResourceString(nameof(Resources.ClassPropertyOrderMessageFormat), Resources.ResourceManager, typeof(Resources));
     private const string Category = "Architecture";
     private static readonly string[] DtoSuffixes = ["BusinessModel", "DataModel", "ViewModel"];
 

@@ -19,14 +19,14 @@ public sealed class LocBudgetAnalyzer : DiagnosticAnalyzer
     public const string ProjectDiagnosticId = "ARCH009";
 
     private const string Category = "Architecture";
-    private const string ClassTitle = "La classe dépasse le budget de lignes ajoutées par le prompt";
-    private const string MethodTitle = "La méthode dépasse le budget de lignes ajoutées par le prompt";
-    private const string SolutionTitle = "La solution dépasse le budget global de lignes ajoutées par le prompt";
-    private const string ProjectTitle = "Le projet dépasse le budget de lignes ajoutées par le prompt";
-    private const string ClassMessageFormat = "La classe '{0}' ajoute {1} lignes de code et dépasse le budget de {2} lignes.";
-    private const string MethodMessageFormat = "La méthode '{0}' ajoute {1} lignes de code et dépasse le budget de {2} lignes.";
-    private const string SolutionMessageFormat = "La solution '{0}' ajoute {1} lignes de code et dépasse le budget global de {2} lignes.";
-    private const string ProjectMessageFormat = "Le projet '{0}' ajoute {1} lignes de code et dépasse le budget de {2} lignes.";
+    private static readonly LocalizableString ClassTitle = new LocalizableResourceString(nameof(Resources.LocBudgetClassTitle), Resources.ResourceManager, typeof(Resources));
+    private static readonly LocalizableString MethodTitle = new LocalizableResourceString(nameof(Resources.LocBudgetMethodTitle), Resources.ResourceManager, typeof(Resources));
+    private static readonly LocalizableString SolutionTitle = new LocalizableResourceString(nameof(Resources.LocBudgetSolutionTitle), Resources.ResourceManager, typeof(Resources));
+    private static readonly LocalizableString ProjectTitle = new LocalizableResourceString(nameof(Resources.LocBudgetProjectTitle), Resources.ResourceManager, typeof(Resources));
+    private static readonly LocalizableString ClassMessageFormat = new LocalizableResourceString(nameof(Resources.LocBudgetClassMessageFormat), Resources.ResourceManager, typeof(Resources));
+    private static readonly LocalizableString MethodMessageFormat = new LocalizableResourceString(nameof(Resources.LocBudgetMethodMessageFormat), Resources.ResourceManager, typeof(Resources));
+    private static readonly LocalizableString SolutionMessageFormat = new LocalizableResourceString(nameof(Resources.LocBudgetSolutionMessageFormat), Resources.ResourceManager, typeof(Resources));
+    private static readonly LocalizableString ProjectMessageFormat = new LocalizableResourceString(nameof(Resources.LocBudgetProjectMessageFormat), Resources.ResourceManager, typeof(Resources));
 
     private readonly ILocBudgetRuleService _locBudgetRuleService;
 

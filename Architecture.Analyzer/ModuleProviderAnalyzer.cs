@@ -12,10 +12,10 @@ public sealed class ModuleProviderAnalyzer : DiagnosticAnalyzer
     public const string MissingProviderContractsDiagnosticId = "ARCH003";
     public const string LocalProviderImplementationDiagnosticId = "ARCH004";
 
-    private const string MissingProviderContractsTitle = "Contrats providers manquants dans un module";
-    private const string MissingProviderContractsMessageFormat = "Le module '{0}' doit contenir le dossier 'Models/Data/Providers' avec au moins une interface.";
-    private const string LocalProviderImplementationTitle = "Implémentation provider interdite dans le module";
-    private const string LocalProviderImplementationMessageFormat = "Le type '{0}' ne doit pas implémenter l'interface provider '{1}' dans le module '{2}'.";
+    private static readonly LocalizableString MissingProviderContractsTitle = new LocalizableResourceString(nameof(Resources.MissingProviderContractsTitle), Resources.ResourceManager, typeof(Resources));
+    private static readonly LocalizableString MissingProviderContractsMessageFormat = new LocalizableResourceString(nameof(Resources.MissingProviderContractsMessageFormat), Resources.ResourceManager, typeof(Resources));
+    private static readonly LocalizableString LocalProviderImplementationTitle = new LocalizableResourceString(nameof(Resources.LocalProviderImplementationTitle), Resources.ResourceManager, typeof(Resources));
+    private static readonly LocalizableString LocalProviderImplementationMessageFormat = new LocalizableResourceString(nameof(Resources.LocalProviderImplementationMessageFormat), Resources.ResourceManager, typeof(Resources));
     private const string Category = "Architecture";
 
     private readonly IModuleProviderRuleService _moduleProviderRuleService;
