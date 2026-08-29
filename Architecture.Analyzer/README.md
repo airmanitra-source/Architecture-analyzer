@@ -23,6 +23,7 @@ Adding the package drops a default `.editorconfig` at the consumer project root 
 | `ARCH007` | Method body stays within its LOC ceiling | `architecture_analyzer.loc_max_lines_per_method` |
 | `ARCH008` | Solution respects the global "% of code added per prompt" budget | `architecture_analyzer.loc_budget_percent_global` + shipped MSBuild target |
 | `ARCH009` | Project respects the per-project "% of code added per prompt" budget | `architecture_analyzer.loc_budget_percent_project` + shipped MSBuild target |
+| `ARCH010` | Project contains the folder(s) required by its own convention (e.g. `HR.Infrastructure` must have `Models/Entities`) | `architecture_analyzer.required_project_folders` |
 
 ## Configuring the rules
 
@@ -142,6 +143,19 @@ dotnet build /p:ArchitectureLocProjectBaselineLines=1000 \
              /p:ArchitectureLocSolutionBaselineLines=50000 \
              /p:ArchitectureLocSolutionAddedLines=120
 ```
+
+### ARCH010 — Required folder per project
+
+Enforce that a given project (matched by assembly name) contains at least one file under a specific folder. Same folder separator flexibility as ARCH001; commas separate multiple required folders for the same project; semicolons separate the project rules.
+
+```ini
+[*.cs]
+architecture_analyzer.required_project_folders = \
+  HR.Infrastructure=Models/Entities;\
+  HR.Module=Models/Data,Presentation/ViewModels
+```
+
+With the config above, the `HR.Infrastructure` project reports ARCH010 (once, at compilation end) unless at least one `.cs` file lives under `Models/Entities`. Projects with no matching rule are ignored.
 
 ## Full worked example
 

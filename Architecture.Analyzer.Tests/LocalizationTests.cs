@@ -179,6 +179,23 @@ public sealed class LocalizationTests
         AssertMessage(diagnostic, "budget global", "global");
     }
 
+    [Fact]
+    public async Task RequiredProjectFolderAnalyzer_LocalizesTitleAndMessage()
+    {
+        var diagnostic = await GetFirstDiagnosticFromDocumentsAsync(
+            [("Class1.cs", "public class Class1 { }")],
+            new RequiredProjectFolderAnalyzer(),
+            RequiredProjectFolderAnalyzer.DiagnosticId,
+            projectName: "HR.Infrastructure",
+            analyzerConfigOptions: new Dictionary<string, string>
+            {
+                ["architecture_analyzer.required_project_folders"] = "HR.Infrastructure=Models/Entities",
+            });
+
+        AssertTitle(diagnostic, "Dossier requis manquant", "Missing required folder");
+        AssertMessage(diagnostic, "doit contenir le dossier", "must contain the folder");
+    }
+
     private static void AssertTitle(Diagnostic diagnostic, string frenchFragment, string englishFragment)
     {
         var frenchTitle = diagnostic.Descriptor.Title.ToString(French);

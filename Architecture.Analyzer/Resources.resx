@@ -118,4 +118,10 @@
   <data name="LocalProviderImplementationMessageFormat" xml:space="preserve">
     <value>Le type '{0}' ne doit pas implémenter l'interface provider '{1}' dans le module '{2}'.</value>
   </data>
+  <data name="RequiredProjectFolderTitle" xml:space="preserve">
+    <value>Dossier requis manquant dans le projet</value>
+  </data>
+  <data name="RequiredProjectFolderMessageFormat" xml:space="preserve">
+    <value>Le projet '{0}' doit contenir le dossier '{1}' avec au moins un fichier.</value>
+  </data>
 </root>

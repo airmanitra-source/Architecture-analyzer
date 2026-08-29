@@ -239,5 +239,23 @@ namespace Architecture.Analyzer {
                 return ResourceManager.GetString("ModelFolderAllowedTitle", resourceCulture);
             }
         }
+
+        /// <summary>
+        ///   Recherche une chaîne localisée semblable à Dossier requis manquant dans le projet.
+        /// </summary>
+        internal static string RequiredProjectFolderTitle {
+            get {
+                return ResourceManager.GetString("RequiredProjectFolderTitle", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Recherche une chaîne localisée semblable à Le projet &apos;{0}&apos; doit contenir le dossier &apos;{1}&apos; avec au moins un fichier..
+        /// </summary>
+        internal static string RequiredProjectFolderMessageFormat {
+            get {
+                return ResourceManager.GetString("RequiredProjectFolderMessageFormat", resourceCulture);
+            }
+        }
     }
 }
