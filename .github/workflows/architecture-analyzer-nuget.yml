@@ -1,4 +1,4 @@
-name: Architecture.Analyzer NuGet
+name: AI.Prompt.Architecture.Analyzers NuGet
 
 on:
   push:

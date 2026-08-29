@@ -9,7 +9,7 @@
     <IncludeBuildOutput>false</IncludeBuildOutput>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <NoPackageAnalysis>true</NoPackageAnalysis>
-    <PackageId>Herimanitra.Architecture.Analyzer</PackageId>
+    <PackageId>AI.Prompt.Architecture.Analyzers</PackageId>
     <Version>1.0.0</Version>
     <Authors>Herimanitra</Authors>
     <Description>Roslyn analyzers for enforcing architecture and naming conventions in .NET solutions.</Description>
