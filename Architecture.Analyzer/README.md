@@ -96,10 +96,6 @@ To fix, either move the implementation to an infrastructure project outside the 
 
 Applies to types whose name ends with `BusinessModel`, `DataModel`, or `ViewModel`. Identifier-like properties (containing `Id`) are ignored in the ordering check. No configuration; just reorder the properties.
 
-### ARCH011 — Methods ordered alphabetically
-
-Applies to every class. Methods must be declared in alphabetical order (ordinal comparison). No configuration; just reorder the methods.
-
 ### ARCH006 / ARCH007 — Class / method size ceiling
 
 Both default to **20 lines**. Override them per project or per folder:
@@ -161,6 +157,10 @@ architecture_analyzer.required_project_folders = \
 ```
 
 With the config above, the `HR.Infrastructure` project reports ARCH010 (once, at compilation end) unless at least one `.cs` file lives under `Models/Entities`. Projects with no matching rule are ignored.
+
+### ARCH011 — Methods ordered alphabetically
+
+Applies to every class. Methods must be declared in alphabetical order (ordinal comparison). No configuration; just reorder the methods.
 
 ## Full worked example
 
