@@ -180,6 +180,20 @@ public sealed class LocalizationTests
     }
 
     [Fact]
+    public async Task ClassMethodOrderAnalyzer_LocalizesTitleAndMessage()
+    {
+        const string source = "public class Customer { public void SaveCustomer() { } public void DeleteCustomer() { } }";
+
+        var diagnostic = await GetFirstDiagnosticAsync(
+            source,
+            new ClassMethodOrderAnalyzer(),
+            ClassMethodOrderAnalyzer.DiagnosticId);
+
+        AssertTitle(diagnostic, "méthodes de la classe", "Class methods");
+        AssertMessage(diagnostic, "doit être placée avant", "must be placed before");
+    }
+
+    [Fact]
     public async Task RequiredProjectFolderAnalyzer_LocalizesTitleAndMessage()
     {
         var diagnostic = await GetFirstDiagnosticFromDocumentsAsync(

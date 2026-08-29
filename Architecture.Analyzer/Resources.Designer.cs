@@ -77,7 +77,25 @@ namespace Architecture.Analyzer {
                 return ResourceManager.GetString("ClassPropertyOrderTitle", resourceCulture);
             }
         }
-        
+
+        /// <summary>
+        ///   Recherche une chaîne localisée semblable à Dans &apos;{0}&apos;, la méthode &apos;{1}&apos; doit être placée avant &apos;{2}&apos; car les méthodes doivent être ordonnées alphabétiquement..
+        /// </summary>
+        internal static string ClassMethodOrderMessageFormat {
+            get {
+                return ResourceManager.GetString("ClassMethodOrderMessageFormat", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Recherche une chaîne localisée semblable à Les méthodes de la classe ne sont pas ordonnées.
+        /// </summary>
+        internal static string ClassMethodOrderTitle {
+            get {
+                return ResourceManager.GetString("ClassMethodOrderTitle", resourceCulture);
+            }
+        }
+
         /// <summary>
         ///   Recherche une chaîne localisée semblable à Le type &apos;{0}&apos; ne doit pas implémenter l&apos;interface provider &apos;{1}&apos; dans le module &apos;{2}&apos;..
         /// </summary>

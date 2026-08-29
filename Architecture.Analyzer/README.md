@@ -24,6 +24,7 @@ Adding the package drops a default `.editorconfig` at the consumer project root 
 | `ARCH008` | Solution respects the global "% of code added per prompt" budget | `architecture_analyzer.loc_budget_percent_global` + shipped MSBuild target |
 | `ARCH009` | Project respects the per-project "% of code added per prompt" budget | `architecture_analyzer.loc_budget_percent_project` + shipped MSBuild target |
 | `ARCH010` | Project contains the folder(s) required by its own convention (e.g. `HR.Infrastructure` must have `Models/Entities`) | `architecture_analyzer.required_project_folders` |
+| `ARCH011` | Class methods are alphabetically ordered | (no configuration) |
 
 ## Configuring the rules
 
@@ -94,6 +95,10 @@ To fix, either move the implementation to an infrastructure project outside the 
 ### ARCH005 — DTO properties ordered alphabetically
 
 Applies to types whose name ends with `BusinessModel`, `DataModel`, or `ViewModel`. Identifier-like properties (containing `Id`) are ignored in the ordering check. No configuration; just reorder the properties.
+
+### ARCH011 — Methods ordered alphabetically
+
+Applies to every class. Methods must be declared in alphabetical order (ordinal comparison). No configuration; just reorder the methods.
 
 ### ARCH006 / ARCH007 — Class / method size ceiling
 

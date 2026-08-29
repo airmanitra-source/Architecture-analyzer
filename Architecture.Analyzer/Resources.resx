@@ -64,6 +64,12 @@
   <data name="ClassPropertyOrderMessageFormat" xml:space="preserve">
     <value>Dans '{0}', la propriété '{1}' doit être placée avant '{2}' car les propriétés doivent être ordonnées alphabétiquement hors identifiants.</value>
   </data>
+  <data name="ClassMethodOrderTitle" xml:space="preserve">
+    <value>Les méthodes de la classe ne sont pas ordonnées</value>
+  </data>
+  <data name="ClassMethodOrderMessageFormat" xml:space="preserve">
+    <value>Dans '{0}', la méthode '{1}' doit être placée avant '{2}' car les méthodes doivent être ordonnées alphabétiquement.</value>
+  </data>
   <data name="LocBudgetClassTitle" xml:space="preserve">
     <value>La classe dépasse le budget de lignes ajoutées par le prompt</value>
   </data>
