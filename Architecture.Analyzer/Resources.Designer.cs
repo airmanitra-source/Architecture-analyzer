@@ -287,5 +287,41 @@ namespace Architecture.Analyzer {
                 return ResourceManager.GetString("ModuleReferenceBarrierMessageFormat", resourceCulture);
             }
         }
+
+        /// <summary>
+        ///   Recherche une chaîne localisée semblable à Le nom de la variable est trop court.
+        /// </summary>
+        internal static string NameLengthVariableTitle {
+            get {
+                return ResourceManager.GetString("NameLengthVariableTitle", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Recherche une chaîne localisée semblable à La variable &apos;{0}&apos; a un nom de {1} caractère(s) et doit en comporter au moins {2}..
+        /// </summary>
+        internal static string NameLengthVariableMessageFormat {
+            get {
+                return ResourceManager.GetString("NameLengthVariableMessageFormat", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Recherche une chaîne localisée semblable à Le nom de la classe est trop court.
+        /// </summary>
+        internal static string NameLengthClassTitle {
+            get {
+                return ResourceManager.GetString("NameLengthClassTitle", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Recherche une chaîne localisée semblable à La classe &apos;{0}&apos; a un nom de {1} caractère(s) et doit en comporter au moins {2}..
+        /// </summary>
+        internal static string NameLengthClassMessageFormat {
+            get {
+                return ResourceManager.GetString("NameLengthClassMessageFormat", resourceCulture);
+            }
+        }
     }
 }

@@ -11,3 +11,11 @@ architecture_analyzer.model_conventions = BusinessModel=Models/Business;DataMode
 # Règles d'exclusion par dossier : dossier=SuffixeAutorisé1,SuffixeAutorisé2
 # Exemple : Models/Business=BusinessModel;Models/Data=DataModel
 architecture_analyzer.model_folder_allowed_suffixes = Models/Business=BusinessModel;Models/Data=DataModel
+
+# Longueur minimale du nom d'une variable (variables locales et champs) — ARCH013.
+# Règle désactivée si la clé est absente. Décommentez pour l'activer.
+# architecture_analyzer.min_variable_name_length = 3
+
+# Longueur minimale du nom d'une classe — ARCH014.
+# Règle désactivée si la clé est absente. Décommentez pour l'activer.
+# architecture_analyzer.min_class_name_length = 3

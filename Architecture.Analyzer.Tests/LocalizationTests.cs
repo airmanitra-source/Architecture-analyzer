@@ -210,6 +210,38 @@ public sealed class LocalizationTests
         AssertMessage(diagnostic, "doit contenir le dossier", "must contain the folder");
     }
 
+    [Fact]
+    public async Task NameLengthAnalyzer_LocalizesVariableTitleAndMessage()
+    {
+        const string source = "public class Customer { public void Run() { int a = 1; } }";
+
+        var diagnostic = await GetFirstDiagnosticAsync(
+            source,
+            new NameLengthAnalyzer(),
+            NameLengthAnalyzer.VariableDiagnosticId,
+            fileName: "Customer.cs",
+            analyzerConfigOptions: new Dictionary<string, string> { ["architecture_analyzer.min_variable_name_length"] = "3" });
+
+        AssertTitle(diagnostic, "nom de la variable est trop court", "Variable name is too short");
+        AssertMessage(diagnostic, "au moins", "at least");
+    }
+
+    [Fact]
+    public async Task NameLengthAnalyzer_LocalizesClassTitleAndMessage()
+    {
+        const string source = "public class Ab { }";
+
+        var diagnostic = await GetFirstDiagnosticAsync(
+            source,
+            new NameLengthAnalyzer(),
+            NameLengthAnalyzer.ClassDiagnosticId,
+            fileName: "Ab.cs",
+            analyzerConfigOptions: new Dictionary<string, string> { ["architecture_analyzer.min_class_name_length"] = "3" });
+
+        AssertTitle(diagnostic, "nom de la classe est trop court", "Class name is too short");
+        AssertMessage(diagnostic, "au moins", "at least");
+    }
+
     private static void AssertTitle(Diagnostic diagnostic, string frenchFragment, string englishFragment)
     {
         var frenchTitle = diagnostic.Descriptor.Title.ToString(French);

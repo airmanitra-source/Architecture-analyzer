@@ -26,6 +26,8 @@ Adding the package drops a default `.editorconfig` at the consumer project root 
 | `ARCH010` | Project contains the folder(s) required by its own convention (e.g. `HR.Infrastructure` must have `Models/Entities`) | `architecture_analyzer.required_project_folders` |
 | `ARCH011` | Class methods are alphabetically ordered | (no configuration) |
 | `ARCH012` | Forbidden cross-module reference | `architecture_analyzer.module_reference_barrier` |
+| `ARCH013` | Variable name is at least N characters long | `architecture_analyzer.min_variable_name_length` |
+| `ARCH014` | Class name is at least N characters long | `architecture_analyzer.min_class_name_length` |
 
 ## Configuring the rules
 
@@ -175,6 +177,30 @@ architecture_analyzer.module_reference_barrier = Portal>Domain, Portal>SSO
 With the config above, any type in a project whose assembly name matches `Portal` (e.g. `MyApp.Portal`) will report ARCH012 if it references a type from a `Domain` or `SSO` assembly (e.g. `MyApp.Domain`).
 
 Module matching is flexible: `Portal` matches assembly names that equal `Portal`, start with `Portal.`, or end with `.Portal` (case-insensitive).
+
+### ARCH013 / ARCH014 — Minimum name length
+
+Reject identifiers whose name is too short to be descriptive. The two rules are **independent** and each is **opt-in**: a rule fires only when its own key is set to a positive integer, and leaving a key unset disables that rule (there is no default minimum).
+
+- `ARCH013` covers **variables** — local variables and fields.
+- `ARCH014` covers **classes**.
+
+```ini
+[*.cs]
+# A variable name must be at least 3 characters long.
+architecture_analyzer.min_variable_name_length = 3
+
+# A class name must be at least 4 characters long.
+architecture_analyzer.min_class_name_length = 4
+```
+
+With the config above, `int a = ...;` reports ARCH013 and `class Ab { }` reports ARCH014, while `int total = ...;` and `class Order { }` pass. Because the rules read separate keys, you can enable one without the other. As with every rule, the folder-scoped `.editorconfig` mechanism lets you loosen or disable them for specific paths (e.g. generated code):
+
+```ini
+[src/Generated/**.cs]
+dotnet_diagnostic.ARCH013.severity = none
+dotnet_diagnostic.ARCH014.severity = none
+```
 
 ## Full worked example
 

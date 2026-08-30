@@ -136,4 +136,16 @@
   <data name="ModuleReferenceBarrierMessageFormat" xml:space="preserve">
     <value>'{0}' ne peut pas référencer '{1}' car le module '{2}' est interdit.</value>
   </data>
+  <data name="NameLengthVariableTitle" xml:space="preserve">
+    <value>Le nom de la variable est trop court</value>
+  </data>
+  <data name="NameLengthVariableMessageFormat" xml:space="preserve">
+    <value>La variable '{0}' a un nom de {1} caractère(s) et doit en comporter au moins {2}.</value>
+  </data>
+  <data name="NameLengthClassTitle" xml:space="preserve">
+    <value>Le nom de la classe est trop court</value>
+  </data>
+  <data name="NameLengthClassMessageFormat" xml:space="preserve">
+    <value>La classe '{0}' a un nom de {1} caractère(s) et doit en comporter au moins {2}.</value>
+  </data>
 </root>
