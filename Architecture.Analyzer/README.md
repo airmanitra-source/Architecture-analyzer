@@ -25,6 +25,7 @@ Adding the package drops a default `.editorconfig` at the consumer project root 
 | `ARCH009` | Project respects the per-project "% of code added per prompt" budget | `architecture_analyzer.loc_budget_percent_project` + shipped MSBuild target |
 | `ARCH010` | Project contains the folder(s) required by its own convention (e.g. `HR.Infrastructure` must have `Models/Entities`) | `architecture_analyzer.required_project_folders` |
 | `ARCH011` | Class methods are alphabetically ordered | (no configuration) |
+| `ARCH012` | Forbidden cross-module reference | `architecture_analyzer.module_reference_barrier` |
 
 ## Configuring the rules
 
@@ -162,6 +163,19 @@ With the config above, the `HR.Infrastructure` project reports ARCH010 (once, at
 
 Applies to every class. Methods must be declared in alphabetical order (ordinal comparison). No configuration; just reorder the methods.
 
+### ARCH012 — Module reference barrier
+
+Forbid one module from referencing another. The syntax `B>A` means "B must not reference A". Multiple rules are comma-separated.
+
+```ini
+[*.cs]
+architecture_analyzer.module_reference_barrier = Portal>Domain, Portal>SSO
+```
+
+With the config above, any type in a project whose assembly name matches `Portal` (e.g. `MyApp.Portal`) will report ARCH012 if it references a type from a `Domain` or `SSO` assembly (e.g. `MyApp.Domain`).
+
+Module matching is flexible: `Portal` matches assembly names that equal `Portal`, start with `Portal.`, or end with `.Portal` (case-insensitive).
+
 ## Full worked example
 
 A typical monolith `.editorconfig` layered on top of the shipped defaults:
@@ -189,6 +203,9 @@ architecture_analyzer.loc_max_lines_per_method = 25
 # ARCH008/ARCH009: hard cap on code volume added per prompt.
 architecture_analyzer.loc_budget_percent_project = 3
 architecture_analyzer.loc_budget_percent_global = 2
+
+# ARCH012: Portal cannot reference Domain or SSO directly.
+architecture_analyzer.module_reference_barrier = Portal>Domain, Portal>SSO
 
 # Downgrade a rule for legacy folders.
 [legacy/**.cs]

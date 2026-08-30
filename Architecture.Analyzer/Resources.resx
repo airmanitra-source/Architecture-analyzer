@@ -130,4 +130,10 @@
   <data name="RequiredProjectFolderMessageFormat" xml:space="preserve">
     <value>Le projet '{0}' doit contenir le dossier '{1}' avec au moins un fichier.</value>
   </data>
+  <data name="ModuleReferenceBarrierTitle" xml:space="preserve">
+    <value>Référence inter-module interdite</value>
+  </data>
+  <data name="ModuleReferenceBarrierMessageFormat" xml:space="preserve">
+    <value>'{0}' ne peut pas référencer '{1}' car le module '{2}' est interdit.</value>
+  </data>
 </root>

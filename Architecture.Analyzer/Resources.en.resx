@@ -130,4 +130,10 @@
   <data name="RequiredProjectFolderMessageFormat" xml:space="preserve">
     <value>Project '{0}' must contain the folder '{1}' with at least one file.</value>
   </data>
+  <data name="ModuleReferenceBarrierTitle" xml:space="preserve">
+    <value>Forbidden cross-module reference</value>
+  </data>
+  <data name="ModuleReferenceBarrierMessageFormat" xml:space="preserve">
+    <value>'{0}' must not reference '{1}' because module '{2}' is forbidden.</value>
+  </data>
 </root>

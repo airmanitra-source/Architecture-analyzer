@@ -275,5 +275,17 @@ namespace Architecture.Analyzer {
                 return ResourceManager.GetString("RequiredProjectFolderMessageFormat", resourceCulture);
             }
         }
+
+        internal static string ModuleReferenceBarrierTitle {
+            get {
+                return ResourceManager.GetString("ModuleReferenceBarrierTitle", resourceCulture);
+            }
+        }
+
+        internal static string ModuleReferenceBarrierMessageFormat {
+            get {
+                return ResourceManager.GetString("ModuleReferenceBarrierMessageFormat", resourceCulture);
+            }
+        }
     }
 }
