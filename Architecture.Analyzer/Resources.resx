@@ -148,4 +148,10 @@
   <data name="NameLengthClassMessageFormat" xml:space="preserve">
     <value>La classe '{0}' a un nom de {1} caractère(s) et doit en comporter au moins {2}.</value>
   </data>
+  <data name="NameLengthMethodTitle" xml:space="preserve">
+    <value>Le nom de la méthode est trop court</value>
+  </data>
+  <data name="NameLengthMethodMessageFormat" xml:space="preserve">
+    <value>La méthode '{0}' a un nom de {1} caractère(s) et doit en comporter au moins {2}.</value>
+  </data>
 </root>

@@ -6,6 +6,7 @@ public sealed class NameLengthAnalyzerTests
 {
     private const string MinVariable = "architecture_analyzer.min_variable_name_length";
     private const string MinClass = "architecture_analyzer.min_class_name_length";
+    private const string MinMethod = "architecture_analyzer.min_method_name_length";
 
     [Fact]
     public async Task ReportsDiagnosticWhenVariableNameIsTooShort()
@@ -94,6 +95,59 @@ public sealed class NameLengthAnalyzerTests
 
         var diagnostics = await ArchitectureAnalyzerTestRunner.AnalyzeAsync(source, new NameLengthAnalyzer(), "Ab.cs");
 
+        Assert.DoesNotContain(diagnostics, diagnostic => diagnostic.Id == NameLengthAnalyzer.ClassDiagnosticId);
+    }
+
+    [Fact]
+    public async Task ReportsDiagnosticWhenMethodNameIsTooShort()
+    {
+        const string source = "public class Customer { public void Go() { } }";
+
+        var diagnostics = await ArchitectureAnalyzerTestRunner.AnalyzeAsync(
+            source,
+            new NameLengthAnalyzer(),
+            "Customer.cs",
+            new Dictionary<string, string> { [MinMethod] = "4" });
+
+        Assert.Contains(diagnostics, diagnostic => diagnostic.Id == NameLengthAnalyzer.MethodDiagnosticId);
+    }
+
+    [Fact]
+    public async Task AllowsMethodNameThatMeetsMinimum()
+    {
+        const string source = "public class Customer { public void Execute() { } }";
+
+        var diagnostics = await ArchitectureAnalyzerTestRunner.AnalyzeAsync(
+            source,
+            new NameLengthAnalyzer(),
+            "Customer.cs",
+            new Dictionary<string, string> { [MinMethod] = "4" });
+
+        Assert.DoesNotContain(diagnostics, diagnostic => diagnostic.Id == NameLengthAnalyzer.MethodDiagnosticId);
+    }
+
+    [Fact]
+    public async Task DoesNotReportMethodWhenNotConfigured()
+    {
+        const string source = "public class Customer { public void Go() { } }";
+
+        var diagnostics = await ArchitectureAnalyzerTestRunner.AnalyzeAsync(source, new NameLengthAnalyzer(), "Customer.cs");
+
+        Assert.DoesNotContain(diagnostics, diagnostic => diagnostic.Id == NameLengthAnalyzer.MethodDiagnosticId);
+    }
+
+    [Fact]
+    public async Task RulesAreIndependent_MethodConfiguredClassIsNot()
+    {
+        const string source = "public class Ab { public void Go() { } }";
+
+        var diagnostics = await ArchitectureAnalyzerTestRunner.AnalyzeAsync(
+            source,
+            new NameLengthAnalyzer(),
+            "Ab.cs",
+            new Dictionary<string, string> { [MinMethod] = "4" });
+
+        Assert.Contains(diagnostics, diagnostic => diagnostic.Id == NameLengthAnalyzer.MethodDiagnosticId);
         Assert.DoesNotContain(diagnostics, diagnostic => diagnostic.Id == NameLengthAnalyzer.ClassDiagnosticId);
     }
 

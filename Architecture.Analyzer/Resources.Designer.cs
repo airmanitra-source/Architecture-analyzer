@@ -323,5 +323,23 @@ namespace Architecture.Analyzer {
                 return ResourceManager.GetString("NameLengthClassMessageFormat", resourceCulture);
             }
         }
+
+        /// <summary>
+        ///   Recherche une chaîne localisée semblable à Le nom de la méthode est trop court.
+        /// </summary>
+        internal static string NameLengthMethodTitle {
+            get {
+                return ResourceManager.GetString("NameLengthMethodTitle", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Recherche une chaîne localisée semblable à La méthode &apos;{0}&apos; a un nom de {1} caractère(s) et doit en comporter au moins {2}..
+        /// </summary>
+        internal static string NameLengthMethodMessageFormat {
+            get {
+                return ResourceManager.GetString("NameLengthMethodMessageFormat", resourceCulture);
+            }
+        }
     }
 }

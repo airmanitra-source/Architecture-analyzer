@@ -38,6 +38,7 @@ Adding the package drops a default `.editorconfig` at the consumer project root 
 | `ARCH012` | Forbidden cross-module reference | `architecture_analyzer.module_reference_barrier` |
 | `ARCH013` | Variable name is at least N characters long | `architecture_analyzer.min_variable_name_length` |
 | `ARCH014` | Class name is at least N characters long | `architecture_analyzer.min_class_name_length` |
+| `ARCH015` | Method name is at least N characters long | `architecture_analyzer.min_method_name_length` |
 
 ## Configuring the rules
 
@@ -188,12 +189,13 @@ With the config above, any type in a project whose assembly name matches `Portal
 
 Module matching is flexible: `Portal` matches assembly names that equal `Portal`, start with `Portal.`, or end with `.Portal` (case-insensitive).
 
-### ARCH013 / ARCH014 — Minimum name length
+### ARCH013 / ARCH014 / ARCH015 — Minimum name length
 
-Reject identifiers whose name is too short to be descriptive. The two rules are **independent** and each is **opt-in**: a rule fires only when its own key is set to a positive integer, and leaving a key unset disables that rule (there is no default minimum).
+Reject identifiers whose name is too short to be descriptive. The three rules are **independent** and each is **opt-in**: a rule fires only when its own key is set to a positive integer, and leaving a key unset disables that rule (there is no default minimum).
 
 - `ARCH013` covers **variables** — local variables and fields.
 - `ARCH014` covers **classes**.
+- `ARCH015` covers **methods**.
 
 ```ini
 [*.cs]
@@ -202,14 +204,18 @@ architecture_analyzer.min_variable_name_length = 3
 
 # A class name must be at least 4 characters long.
 architecture_analyzer.min_class_name_length = 4
+
+# A method name must be at least 4 characters long.
+architecture_analyzer.min_method_name_length = 4
 ```
 
-With the config above, `int a = ...;` reports ARCH013 and `class Ab { }` reports ARCH014, while `int total = ...;` and `class Order { }` pass. Because the rules read separate keys, you can enable one without the other. As with every rule, the folder-scoped `.editorconfig` mechanism lets you loosen or disable them for specific paths (e.g. generated code):
+With the config above, `int a = ...;` reports ARCH013, `class Ab { }` reports ARCH014 and `void Go() { }` reports ARCH015, while `int total = ...;`, `class Order { }` and `void Execute() { }` pass. Because the rules read separate keys, you can enable one without the others. As with every rule, the folder-scoped `.editorconfig` mechanism lets you loosen or disable them for specific paths (e.g. generated code):
 
 ```ini
 [src/Generated/**.cs]
 dotnet_diagnostic.ARCH013.severity = none
 dotnet_diagnostic.ARCH014.severity = none
+dotnet_diagnostic.ARCH015.severity = none
 ```
 
 ## Full worked example

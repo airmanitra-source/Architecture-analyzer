@@ -10,6 +10,7 @@ internal sealed class NameLengthRuleService : INameLengthRuleService
     private const string AnalyzerConfigPrefix = "architecture_analyzer.";
     private const string MinVariableNameLengthOption = AnalyzerConfigPrefix + "min_variable_name_length";
     private const string MinClassNameLengthOption = AnalyzerConfigPrefix + "min_class_name_length";
+    private const string MinMethodNameLengthOption = AnalyzerConfigPrefix + "min_method_name_length";
 
     public int? GetMinVariableNameLength(AnalyzerConfigOptions options)
         => GetPositiveIntOption(options, MinVariableNameLengthOption);
@@ -17,10 +18,16 @@ internal sealed class NameLengthRuleService : INameLengthRuleService
     public int? GetMinClassNameLength(AnalyzerConfigOptions options)
         => GetPositiveIntOption(options, MinClassNameLengthOption);
 
+    public int? GetMinMethodNameLength(AnalyzerConfigOptions options)
+        => GetPositiveIntOption(options, MinMethodNameLengthOption);
+
     public NameLengthViolation? GetVariableNameViolation(SyntaxToken identifier, int minLength)
         => CreateViolation(identifier, minLength);
 
     public NameLengthViolation? GetClassNameViolation(ClassDeclarationSyntax declaration, int minLength)
+        => CreateViolation(declaration.Identifier, minLength);
+
+    public NameLengthViolation? GetMethodNameViolation(MethodDeclarationSyntax declaration, int minLength)
         => CreateViolation(declaration.Identifier, minLength);
 
     private static NameLengthViolation? CreateViolation(SyntaxToken identifier, int minLength)

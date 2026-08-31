@@ -11,7 +11,11 @@ internal interface INameLengthRuleService
 
     int? GetMinClassNameLength(AnalyzerConfigOptions options);
 
+    int? GetMinMethodNameLength(AnalyzerConfigOptions options);
+
     NameLengthViolation? GetVariableNameViolation(SyntaxToken identifier, int minLength);
 
     NameLengthViolation? GetClassNameViolation(ClassDeclarationSyntax declaration, int minLength);
+
+    NameLengthViolation? GetMethodNameViolation(MethodDeclarationSyntax declaration, int minLength);
 }

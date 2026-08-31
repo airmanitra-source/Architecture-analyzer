@@ -242,6 +242,22 @@ public sealed class LocalizationTests
         AssertMessage(diagnostic, "au moins", "at least");
     }
 
+    [Fact]
+    public async Task NameLengthAnalyzer_LocalizesMethodTitleAndMessage()
+    {
+        const string source = "public class Customer { public void Go() { } }";
+
+        var diagnostic = await GetFirstDiagnosticAsync(
+            source,
+            new NameLengthAnalyzer(),
+            NameLengthAnalyzer.MethodDiagnosticId,
+            fileName: "Customer.cs",
+            analyzerConfigOptions: new Dictionary<string, string> { ["architecture_analyzer.min_method_name_length"] = "4" });
+
+        AssertTitle(diagnostic, "nom de la méthode est trop court", "Method name is too short");
+        AssertMessage(diagnostic, "au moins", "at least");
+    }
+
     private static void AssertTitle(Diagnostic diagnostic, string frenchFragment, string englishFragment)
     {
         var frenchTitle = diagnostic.Descriptor.Title.ToString(French);

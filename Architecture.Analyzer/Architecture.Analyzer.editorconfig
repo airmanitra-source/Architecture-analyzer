@@ -19,3 +19,7 @@ architecture_analyzer.model_folder_allowed_suffixes = Models/Business=BusinessMo
 # Longueur minimale du nom d'une classe — ARCH014.
 # Règle désactivée si la clé est absente. Décommentez pour l'activer.
 # architecture_analyzer.min_class_name_length = 3
+
+# Longueur minimale du nom d'une méthode — ARCH015.
+# Règle désactivée si la clé est absente. Décommentez pour l'activer.
+# architecture_analyzer.min_method_name_length = 3
