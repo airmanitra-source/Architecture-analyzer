@@ -180,4 +180,90 @@ public sealed class NameLengthAnalyzerTests
         Assert.Contains(diagnostics, diagnostic => diagnostic.Id == NameLengthAnalyzer.VariableDiagnosticId);
         Assert.DoesNotContain(diagnostics, diagnostic => diagnostic.Id == NameLengthAnalyzer.ClassDiagnosticId);
     }
+
+    [Fact]
+    public async Task DoesNotReportMethodThatOverridesFrameworkMethod()
+    {
+        const string source = "public class Customer { public override string ToString() { return \"x\"; } }";
+
+        var diagnostics = await ArchitectureAnalyzerTestRunner.AnalyzeAsync(
+            source,
+            new NameLengthAnalyzer(),
+            "Customer.cs",
+            new Dictionary<string, string> { [MinMethod] = "14" });
+
+        Assert.DoesNotContain(diagnostics, diagnostic => diagnostic.Id == NameLengthAnalyzer.MethodDiagnosticId);
+    }
+
+    [Fact]
+    public async Task DoesNotReportMethodThatImplementsInterfaceMember()
+    {
+        const string source = "using System; public class Handle : IDisposable { public void Dispose() { } }";
+
+        var diagnostics = await ArchitectureAnalyzerTestRunner.AnalyzeAsync(
+            source,
+            new NameLengthAnalyzer(),
+            "Handle.cs",
+            new Dictionary<string, string> { [MinMethod] = "14" });
+
+        Assert.DoesNotContain(diagnostics, diagnostic => diagnostic.Id == NameLengthAnalyzer.MethodDiagnosticId);
+    }
+
+    [Fact]
+    public async Task DoesNotReportExplicitInterfaceImplementation()
+    {
+        const string source = "using System; public class Handle : IDisposable { void IDisposable.Dispose() { } }";
+
+        var diagnostics = await ArchitectureAnalyzerTestRunner.AnalyzeAsync(
+            source,
+            new NameLengthAnalyzer(),
+            "Handle.cs",
+            new Dictionary<string, string> { [MinMethod] = "14" });
+
+        Assert.DoesNotContain(diagnostics, diagnostic => diagnostic.Id == NameLengthAnalyzer.MethodDiagnosticId);
+    }
+
+    [Fact]
+    public async Task ReportsDiagnosticForShortInterfaceMethodDeclaration()
+    {
+        const string source = "public interface IThing { void Go(); }";
+
+        var diagnostics = await ArchitectureAnalyzerTestRunner.AnalyzeAsync(
+            source,
+            new NameLengthAnalyzer(),
+            "IThing.cs",
+            new Dictionary<string, string> { [MinMethod] = "4" });
+
+        Assert.Contains(diagnostics, diagnostic => diagnostic.Id == NameLengthAnalyzer.MethodDiagnosticId);
+    }
+
+    [Fact]
+    public async Task ReportsMethodThatOverridesApplicationBaseMethod()
+    {
+        const string source = "public class Base { public virtual void Go() { } } public class Derived : Base { public override void Go() { } }";
+
+        var diagnostics = await ArchitectureAnalyzerTestRunner.AnalyzeAsync(
+            source,
+            new NameLengthAnalyzer(),
+            "Types.cs",
+            new Dictionary<string, string> { [MinMethod] = "4" });
+
+        // The base is app-defined, so both it and its app-side override are flagged.
+        Assert.Equal(2, diagnostics.Count(diagnostic => diagnostic.Id == NameLengthAnalyzer.MethodDiagnosticId));
+    }
+
+    [Fact]
+    public async Task ReportsMethodThatImplementsApplicationInterfaceMember()
+    {
+        const string source = "public interface IThing { void Go(); } public class Thing : IThing { public void Go() { } }";
+
+        var diagnostics = await ArchitectureAnalyzerTestRunner.AnalyzeAsync(
+            source,
+            new NameLengthAnalyzer(),
+            "Types.cs",
+            new Dictionary<string, string> { [MinMethod] = "4" });
+
+        // The interface is app-defined, so both its member and the app-side implementation are flagged.
+        Assert.Equal(2, diagnostics.Count(diagnostic => diagnostic.Id == NameLengthAnalyzer.MethodDiagnosticId));
+    }
 }

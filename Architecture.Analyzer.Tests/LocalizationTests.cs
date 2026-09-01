@@ -256,6 +256,7 @@ public sealed class LocalizationTests
 
         AssertTitle(diagnostic, "nom de la méthode est trop court", "Method name is too short");
         AssertMessage(diagnostic, "au moins", "at least");
+        AssertMessage(diagnostic, "refléter l'intention", "reflect the method's intent");
     }
 
     private static void AssertTitle(Diagnostic diagnostic, string frenchFragment, string englishFragment)

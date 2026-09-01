@@ -18,4 +18,6 @@ internal interface INameLengthRuleService
     NameLengthViolation? GetClassNameViolation(ClassDeclarationSyntax declaration, int minLength);
 
     NameLengthViolation? GetMethodNameViolation(MethodDeclarationSyntax declaration, int minLength);
+
+    bool IsExemptFromMethodNameRule(IMethodSymbol? method);
 }

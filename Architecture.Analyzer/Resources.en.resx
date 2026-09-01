@@ -152,6 +152,6 @@
     <value>Method name is too short</value>
   </data>
   <data name="NameLengthMethodMessageFormat" xml:space="preserve">
-    <value>Method '{0}' has a {1}-character name and must be at least {2} characters long.</value>
+    <value>Method '{0}' has a {1}-character name and must be at least {2} characters long: the name must be expressive and reflect the method's intent.</value>
   </data>
 </root>

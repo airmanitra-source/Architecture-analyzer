@@ -334,7 +334,7 @@ namespace Architecture.Analyzer {
         }
 
         /// <summary>
-        ///   Recherche une chaîne localisée semblable à La méthode &apos;{0}&apos; a un nom de {1} caractère(s) et doit en comporter au moins {2}..
+        ///   Recherche une chaîne localisée semblable à La méthode &apos;{0}&apos; a un nom de {1} caractère(s) et doit en comporter au moins {2} : le nom doit être expressif et refléter l&apos;intention de la méthode..
         /// </summary>
         internal static string NameLengthMethodMessageFormat {
             get {

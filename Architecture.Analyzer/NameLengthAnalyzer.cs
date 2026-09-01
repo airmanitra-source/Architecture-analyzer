@@ -106,6 +106,12 @@ public sealed class NameLengthAnalyzer : DiagnosticAnalyzer
             return;
         }
 
+        var symbol = context.SemanticModel.GetDeclaredSymbol(declaration, context.CancellationToken) as IMethodSymbol;
+        if (_nameLengthRuleService.IsExemptFromMethodNameRule(symbol))
+        {
+            return;
+        }
+
         var violation = _nameLengthRuleService.GetMethodNameViolation(declaration, minLength.Value);
         if (violation is null)
         {

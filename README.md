@@ -195,7 +195,7 @@ Reject identifiers whose name is too short to be descriptive. The three rules ar
 
 - `ARCH013` covers **variables** — local variables and fields.
 - `ARCH014` covers **classes**.
-- `ARCH015` covers **methods**.
+- `ARCH015` covers **methods** — the message reminds the author that a method name must be expressive and reflect the method's intent. Only names the app actually chooses are checked: a method that overrides a base member or implements an interface member declared in a **referenced assembly** (NuGet, Microsoft, etc.) is exempt, because that name is imposed by the external contract. Overrides and interface implementations of the app's **own** base classes or interfaces are still checked (the name was chosen in your code).
 
 ```ini
 [*.cs]
