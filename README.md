@@ -178,11 +178,11 @@ Applies to every class. Methods must be declared in alphabetical order (ordinal 
 
 ### ARCH012 — Module reference barrier
 
-Forbid one module from referencing another. The syntax `B>A` means "B must not reference A". Multiple rules are comma-separated.
+Forbid one module from referencing another. The syntax `B>A` means "B must not reference A". Multiple rules are separated by `;` (consistent with the analyzer's other multi-rule keys); `,` is also accepted.
 
 ```ini
 [*.cs]
-architecture_analyzer.module_reference_barrier = Portal>Domain, Portal>SSO
+architecture_analyzer.module_reference_barrier = Portal>Domain;Portal>SSO
 ```
 
 With the config above, any type in a project whose assembly name matches `Portal` (e.g. `MyApp.Portal`) will report ARCH012 if it references a type from a `Domain` or `SSO` assembly (e.g. `MyApp.Domain`).
@@ -247,7 +247,7 @@ architecture_analyzer.loc_budget_percent_project = 3
 architecture_analyzer.loc_budget_percent_global = 2
 
 # ARCH012: Portal cannot reference Domain or SSO directly.
-architecture_analyzer.module_reference_barrier = Portal>Domain, Portal>SSO
+architecture_analyzer.module_reference_barrier = Portal>Domain;Portal>SSO
 
 # Downgrade a rule for legacy folders.
 [legacy/**.cs]

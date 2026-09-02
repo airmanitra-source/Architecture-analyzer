@@ -87,6 +87,64 @@ namespace MyApp.Portal
         Assert.DoesNotContain(diagnostics, d => d.Id == ModuleReferenceBarrierAnalyzer.DiagnosticId);
     }
 
+    [Fact]
+    public async Task ReportsWhenRulesAreSeparatedBySemicolons()
+    {
+        // Reproduces a config that uses ';' between rules (like every other key of
+        // the analyzer). The forbidden reference must still be caught.
+        var infraRef = BuildAssemblyReference(
+            "MyApp.Infrastructure",
+            "namespace MyApp.Infrastructure { public class DbContext { } }");
+
+        var diagnostics = await AnalyzeWithExternalReference(
+            "MyApp.Portal",
+            [("Service.cs", @"
+using MyApp.Infrastructure;
+namespace MyApp.Portal
+{
+    public class Service
+    {
+        public void Do(DbContext ctx) { }
+    }
+}
+")],
+            infraRef,
+            new Dictionary<string, string>
+            {
+                ["architecture_analyzer.module_reference_barrier"] = "Portal>Domain;Portal>SSO;Portal>Infrastructure"
+            });
+
+        Assert.Contains(diagnostics, d => d.Id == ModuleReferenceBarrierAnalyzer.DiagnosticId);
+    }
+
+    [Fact]
+    public async Task ReportsWhenRulesAreSeparatedByCommas()
+    {
+        var infraRef = BuildAssemblyReference(
+            "MyApp.Infrastructure",
+            "namespace MyApp.Infrastructure { public class DbContext { } }");
+
+        var diagnostics = await AnalyzeWithExternalReference(
+            "MyApp.Portal",
+            [("Service.cs", @"
+using MyApp.Infrastructure;
+namespace MyApp.Portal
+{
+    public class Service
+    {
+        public void Do(DbContext ctx) { }
+    }
+}
+")],
+            infraRef,
+            new Dictionary<string, string>
+            {
+                ["architecture_analyzer.module_reference_barrier"] = "Portal>Domain, Portal>Infrastructure"
+            });
+
+        Assert.Contains(diagnostics, d => d.Id == ModuleReferenceBarrierAnalyzer.DiagnosticId);
+    }
+
     private static MetadataReference BuildAssemblyReference(string assemblyName, string source)
     {
         var tree = CSharpSyntaxTree.ParseText(source);

@@ -25,7 +25,10 @@ internal sealed class ModuleReferenceBarrierRuleService : IModuleReferenceBarrie
 
         var rules = new List<Models.ModuleReferenceBarrierRule>();
 
-        foreach (var entry in value.Split(','))
+        // Rules are separated by ';' (consistent with every other multi-rule key of
+        // this analyzer) or ',' (the historically documented separator). A single
+        // rule "Source>Forbidden" never contains either character.
+        foreach (var entry in value.Split(new[] { ';', ',' }, StringSplitOptions.RemoveEmptyEntries))
         {
             var trimmed = entry.Trim();
             var separatorIndex = trimmed.IndexOf('>');
