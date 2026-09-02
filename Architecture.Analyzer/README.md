@@ -179,6 +179,16 @@ With the config above, any type in a project whose assembly name matches `Portal
 
 Module matching is flexible: `Portal` matches assembly names that equal `Portal`, start with `Portal.`, or end with `.Portal` (case-insensitive).
 
+**Exempting files (e.g. the composition root).** The application entry point legitimately wires modules together, so `Program.cs` / `Startup.cs` usually must reference otherwise-forbidden modules. List the files to exclude from the barrier with `module_reference_barrier_exceptions` (`;`- or `,`-separated). An entry matches by file name (`Program.cs`) or by path suffix (`Portal/Program.cs`):
+
+```ini
+[*.cs]
+architecture_analyzer.module_reference_barrier = Portal>Infrastructure
+architecture_analyzer.module_reference_barrier_exceptions = Program.cs;Startup.cs
+```
+
+With this config, `Program.cs` may reference `Infrastructure` freely while every other file in `Portal` still reports ARCH012.
+
 ### ARCH013 / ARCH014 / ARCH015 — Minimum name length
 
 Reject identifiers whose name is too short to be descriptive. The three rules are **independent** and each is **opt-in**: a rule fires only when its own key is set to a positive integer, and leaving a key unset disables that rule (there is no default minimum).

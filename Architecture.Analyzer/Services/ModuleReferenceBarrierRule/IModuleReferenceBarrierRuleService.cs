@@ -8,5 +8,9 @@ internal interface IModuleReferenceBarrierRuleService
 {
     List<Models.ModuleReferenceBarrierRule> GetBarrierRules(AnalyzerConfigOptions options, string? assemblyName);
 
+    IReadOnlyCollection<string> GetExemptedFiles(AnalyzerConfigOptions options);
+
+    bool IsFileExempted(string? filePath, IReadOnlyCollection<string> exemptedFiles);
+
     Models.ModuleReferenceBarrierViolation? CheckSymbolReference(ISymbol referencedSymbol, ISymbol containingSymbol, List<Models.ModuleReferenceBarrierRule> rules, Location location);
 }

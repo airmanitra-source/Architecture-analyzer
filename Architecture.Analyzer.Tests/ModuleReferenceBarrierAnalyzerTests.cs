@@ -145,6 +145,64 @@ namespace MyApp.Portal
         Assert.Contains(diagnostics, d => d.Id == ModuleReferenceBarrierAnalyzer.DiagnosticId);
     }
 
+    [Fact]
+    public async Task DoesNotReportInExemptedFile()
+    {
+        var infraRef = BuildAssemblyReference(
+            "MyApp.Infrastructure",
+            "namespace MyApp.Infrastructure { public class DbContext { } }");
+
+        var diagnostics = await AnalyzeWithExternalReference(
+            "MyApp.Portal",
+            [("Program.cs", @"
+using MyApp.Infrastructure;
+namespace MyApp.Portal
+{
+    public class Startup
+    {
+        public void Configure(DbContext ctx) { }
+    }
+}
+")],
+            infraRef,
+            new Dictionary<string, string>
+            {
+                ["architecture_analyzer.module_reference_barrier"] = "Portal>Infrastructure",
+                ["architecture_analyzer.module_reference_barrier_exceptions"] = "Program.cs"
+            });
+
+        Assert.DoesNotContain(diagnostics, d => d.Id == ModuleReferenceBarrierAnalyzer.DiagnosticId);
+    }
+
+    [Fact]
+    public async Task ReportsInNonExemptedFileWhenExceptionsConfigured()
+    {
+        var infraRef = BuildAssemblyReference(
+            "MyApp.Infrastructure",
+            "namespace MyApp.Infrastructure { public class DbContext { } }");
+
+        var diagnostics = await AnalyzeWithExternalReference(
+            "MyApp.Portal",
+            [("Controllers/HomeController.cs", @"
+using MyApp.Infrastructure;
+namespace MyApp.Portal
+{
+    public class HomeController
+    {
+        public void Index(DbContext ctx) { }
+    }
+}
+")],
+            infraRef,
+            new Dictionary<string, string>
+            {
+                ["architecture_analyzer.module_reference_barrier"] = "Portal>Infrastructure",
+                ["architecture_analyzer.module_reference_barrier_exceptions"] = "Program.cs"
+            });
+
+        Assert.Contains(diagnostics, d => d.Id == ModuleReferenceBarrierAnalyzer.DiagnosticId);
+    }
+
     private static MetadataReference BuildAssemblyReference(string assemblyName, string source)
     {
         var tree = CSharpSyntaxTree.ParseText(source);

@@ -54,25 +54,31 @@ public sealed class ModuleReferenceBarrierAnalyzer : DiagnosticAnalyzer
                 return;
             }
 
-            var rules = _ruleService.GetBarrierRules(
-                startContext.Options.AnalyzerConfigOptionsProvider.GetOptions(firstTree),
-                startContext.Compilation.AssemblyName);
+            var options = startContext.Options.AnalyzerConfigOptionsProvider.GetOptions(firstTree);
+            var rules = _ruleService.GetBarrierRules(options, startContext.Compilation.AssemblyName);
 
             if (rules.Count == 0)
             {
                 return;
             }
 
+            var exemptedFiles = _ruleService.GetExemptedFiles(options);
+
             startContext.RegisterSyntaxNodeAction(
-                nodeContext => AnalyzeIdentifier(nodeContext, rules),
+                nodeContext => AnalyzeIdentifier(nodeContext, rules, exemptedFiles),
                 SyntaxKind.IdentifierName,
                 SyntaxKind.GenericName,
                 SyntaxKind.QualifiedName);
         });
     }
 
-    private void AnalyzeIdentifier(SyntaxNodeAnalysisContext context, List<ModuleReferenceBarrierRule> rules)
+    private void AnalyzeIdentifier(SyntaxNodeAnalysisContext context, List<ModuleReferenceBarrierRule> rules, IReadOnlyCollection<string> exemptedFiles)
     {
+        if (_ruleService.IsFileExempted(context.Node.SyntaxTree.FilePath, exemptedFiles))
+        {
+            return;
+        }
+
         var symbolInfo = context.SemanticModel.GetSymbolInfo(context.Node, context.CancellationToken);
         var referencedSymbol = symbolInfo.Symbol;
         if (referencedSymbol is null)

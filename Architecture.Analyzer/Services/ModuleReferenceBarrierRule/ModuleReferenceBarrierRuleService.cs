@@ -10,6 +10,7 @@ internal sealed class ModuleReferenceBarrierRuleService : IModuleReferenceBarrie
 {
     private const string AnalyzerConfigPrefix = "architecture_analyzer.";
     private const string BarrierOption = AnalyzerConfigPrefix + "module_reference_barrier";
+    private const string ExceptionsOption = AnalyzerConfigPrefix + "module_reference_barrier_exceptions";
 
     public List<Models.ModuleReferenceBarrierRule> GetBarrierRules(AnalyzerConfigOptions options, string? assemblyName)
     {
@@ -49,6 +50,52 @@ internal sealed class ModuleReferenceBarrierRuleService : IModuleReferenceBarrie
         return rules;
     }
 
+    // Files (by name or path suffix) where the barrier does not apply — typically the
+    // composition root (Program.cs / Startup.cs) that legitimately wires modules together.
+    public IReadOnlyCollection<string> GetExemptedFiles(AnalyzerConfigOptions options)
+    {
+        if (!options.TryGetValue(ExceptionsOption, out var value) || string.IsNullOrWhiteSpace(value))
+        {
+            return Array.Empty<string>();
+        }
+
+        var exempted = new List<string>();
+        foreach (var entry in value.Split(new[] { ';', ',' }, StringSplitOptions.RemoveEmptyEntries))
+        {
+            var trimmed = entry.Trim();
+            if (trimmed.Length > 0)
+            {
+                exempted.Add(Normalize(trimmed));
+            }
+        }
+
+        return exempted;
+    }
+
+    public bool IsFileExempted(string? filePath, IReadOnlyCollection<string> exemptedFiles)
+    {
+        if (string.IsNullOrEmpty(filePath) || exemptedFiles.Count == 0)
+        {
+            return false;
+        }
+
+        var normalizedPath = Normalize(filePath!);
+        var lastSlash = normalizedPath.LastIndexOf('/');
+        var fileName = lastSlash >= 0 ? normalizedPath.Substring(lastSlash + 1) : normalizedPath;
+
+        foreach (var exempted in exemptedFiles)
+        {
+            if (fileName.Equals(exempted, StringComparison.OrdinalIgnoreCase)
+                || normalizedPath.Equals(exempted, StringComparison.OrdinalIgnoreCase)
+                || normalizedPath.EndsWith("/" + exempted, StringComparison.OrdinalIgnoreCase))
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     public Models.ModuleReferenceBarrierViolation? CheckSymbolReference(
         ISymbol referencedSymbol,
         ISymbol containingSymbol,
@@ -85,4 +132,7 @@ internal sealed class ModuleReferenceBarrierRuleService : IModuleReferenceBarrie
         => assemblyName.Equals(moduleName, StringComparison.OrdinalIgnoreCase)
            || assemblyName.StartsWith(moduleName + ".", StringComparison.OrdinalIgnoreCase)
            || assemblyName.EndsWith("." + moduleName, StringComparison.OrdinalIgnoreCase);
+
+    private static string Normalize(string path)
+        => path.Replace('\\', '/');
 }
