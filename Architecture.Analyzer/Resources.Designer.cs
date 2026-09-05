@@ -341,5 +341,23 @@ namespace Architecture.Analyzer {
                 return ResourceManager.GetString("NameLengthMethodMessageFormat", resourceCulture);
             }
         }
+
+        /// <summary>
+        ///   Recherche une chaîne localisée semblable à Type de paramètre interdit pour ce type de classe.
+        /// </summary>
+        internal static string MethodArgumentTypeBarrierTitle {
+            get {
+                return ResourceManager.GetString("MethodArgumentTypeBarrierTitle", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Recherche une chaîne localisée semblable à La méthode &apos;{0}&apos; de la classe &apos;{1}&apos; ne peut pas avoir un paramètre de type &apos;{2}&apos; : une classe correspondant au motif &apos;{3}&apos; ne doit pas accepter un type correspondant au motif &apos;{4}&apos;..
+        /// </summary>
+        internal static string MethodArgumentTypeBarrierMessageFormat {
+            get {
+                return ResourceManager.GetString("MethodArgumentTypeBarrierMessageFormat", resourceCulture);
+            }
+        }
     }
 }

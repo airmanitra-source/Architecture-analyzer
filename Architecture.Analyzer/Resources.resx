@@ -154,4 +154,10 @@
   <data name="NameLengthMethodMessageFormat" xml:space="preserve">
     <value>La méthode '{0}' a un nom de {1} caractère(s) et doit en comporter au moins {2} : le nom doit être expressif et refléter l'intention de la méthode.</value>
   </data>
+  <data name="MethodArgumentTypeBarrierTitle" xml:space="preserve">
+    <value>Type de paramètre interdit pour ce type de classe</value>
+  </data>
+  <data name="MethodArgumentTypeBarrierMessageFormat" xml:space="preserve">
+    <value>La méthode '{0}' de la classe '{1}' ne peut pas avoir un paramètre de type '{2}' : une classe correspondant au motif '{3}' ne doit pas accepter un type correspondant au motif '{4}'.</value>
+  </data>
 </root>

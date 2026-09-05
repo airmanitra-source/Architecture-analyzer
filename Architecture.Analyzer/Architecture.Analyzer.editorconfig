@@ -23,3 +23,14 @@ architecture_analyzer.model_folder_allowed_suffixes = Models/Business=BusinessMo
 # Longueur minimale du nom d'une méthode — ARCH015.
 # Règle désactivée si la clé est absente. Décommentez pour l'activer.
 # architecture_analyzer.min_method_name_length = 3
+
+# Types de paramètres interdits selon le nom de la classe — ARCH016.
+# Syntaxe « MotifClasse>MotifTypeInterdit » : les méthodes d'une classe dont le nom
+# correspond à MotifClasse ne peuvent pas avoir de paramètre dont le type correspond
+# à MotifTypeInterdit. Le caractère '*' choisit le mode de correspondance :
+#   *Module   -> se termine par (suffixe)
+#   Module*   -> commence par (préfixe)
+#   Module    -> nom entier (exact)
+#   *Module*  -> contient
+# Plusieurs règles séparées par ';' (ou ','). Désactivée si la clé est absente.
+# architecture_analyzer.method_argument_type_barrier = *Module>*DataModel

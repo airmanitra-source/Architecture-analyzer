@@ -29,6 +29,7 @@ Adding the package drops a default `.editorconfig` at the consumer project root 
 | `ARCH013` | Variable name is at least N characters long | `architecture_analyzer.min_variable_name_length` |
 | `ARCH014` | Class name is at least N characters long | `architecture_analyzer.min_class_name_length` |
 | `ARCH015` | Method name is at least N characters long | `architecture_analyzer.min_method_name_length` |
+| `ARCH016` | A class whose name matches pattern X must not accept a method parameter whose type matches pattern Y | `architecture_analyzer.method_argument_type_barrier` |
 
 ## Configuring the rules
 
@@ -217,6 +218,27 @@ dotnet_diagnostic.ARCH013.severity = none
 dotnet_diagnostic.ARCH014.severity = none
 dotnet_diagnostic.ARCH015.severity = none
 ```
+
+### ARCH016 — Method argument type barrier
+
+Forbid the methods of a class from accepting a certain kind of object as a parameter, matched by name. The syntax `ClassPattern>ForbiddenTypePattern` means "a type whose name matches `ClassPattern` must not declare a method parameter whose type name matches `ForbiddenTypePattern`". Multiple rules are separated by `;` (consistent with the analyzer's other multi-rule keys); `,` is also accepted. The rule is opt-in: it fires only when the key is set.
+
+Each side is a pattern, and a leading and/or trailing `*` selects how it matches — so you can target a suffix, a prefix, the whole name, or a substring:
+
+| Pattern | Matches | Example |
+|---------|---------|---------|
+| `*Module`  | name **ends with** `Module` (suffix) | `CustomerModule` |
+| `Module*`  | name **starts with** `Module` (prefix) | `ModuleRegistry` |
+| `Module`   | name **is exactly** `Module` (whole name) | `Module` |
+| `*Module*` | name **contains** `Module` (substring) | `MyModuleHelper` |
+
+```ini
+[*.cs]
+# Classes whose name ends with "Module" must not take a parameter whose type ends with "DataModel".
+architecture_analyzer.method_argument_type_barrier = *Module>*DataModel
+```
+
+With the config above, any class whose name ends with `Module` (e.g. `CustomerModule`) reports ARCH016 when one of its methods declares a parameter whose type ends with `DataModel` (e.g. `void Register(CustomerDataModel model)`). The check looks through arrays and generic type arguments, so `CustomerDataModel[]` and `Wrapper<CustomerDataModel>` are caught too. Matching is ordinal (case-sensitive), so a `CustomerViewModel` parameter does **not** match `*DataModel`. Only methods declared in a **class** are checked (records included); interfaces and structs are out of scope, and a generic method's own type parameters (e.g. `Register<TDataModel>(TDataModel item)`) are never treated as a forbidden type.
 
 ## Full worked example
 
