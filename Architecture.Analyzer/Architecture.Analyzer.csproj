@@ -10,7 +10,7 @@
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <NoPackageAnalysis>true</NoPackageAnalysis>
     <PackageId>AI.Prompt.Architecture.Analyzers</PackageId>
-    <Version>1.6.0</Version>
+    <Version>1.6.1</Version>
     <Authors>Herimanitra</Authors>
     <Description>Roslyn analyzers for enforcing architecture and naming conventions in .NET solutions.</Description>
     <PackageTags>roslyn;analyzer;architecture;dotnet</PackageTags>
@@ -39,10 +39,14 @@
     <!-- Satellite assembly with the English localized diagnostic strings. -->
     <None Include="$(OutputPath)en\$(AssemblyName).resources.dll" Pack="true" PackagePath="analyzers/dotnet/cs/en" Visible="false" />
 
-    <!-- MSBuild targets that compute the LOC budget inputs from the git CLI at build time.
-         Shipped in both build/ and buildTransitive/ so the target runs in consuming projects. -->
-    <None Include="build\Architecture.Analyzer.targets" Pack="true" PackagePath="build\Architecture.Analyzer.targets" Visible="false" />
-    <None Include="build\Architecture.Analyzer.targets" Pack="true" PackagePath="buildTransitive\Architecture.Analyzer.targets" Visible="false" />
+    <!-- MSBuild targets that compute the LOC budget inputs (ARCH008/ARCH009) from the git CLI at
+         build time. NuGet auto-imports a build/ or buildTransitive/ MSBuild file ONLY when it is
+         named exactly after the PackageId, so the packed name is derived from $(PackageId) and can
+         never drift from it (the repo file keeps its descriptive name). Shipped in both build/
+         (direct references) and buildTransitive/ (transitive references) so the target runs in
+         every consuming project. -->
+    <None Include="build\Architecture.Analyzer.targets" Pack="true" PackagePath="build\$(PackageId).targets" Visible="false" />
+    <None Include="build\Architecture.Analyzer.targets" Pack="true" PackagePath="buildTransitive\$(PackageId).targets" Visible="false" />
   </ItemGroup>
 
   <ItemGroup>

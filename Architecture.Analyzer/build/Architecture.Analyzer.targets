@@ -20,6 +20,7 @@
     <ParameterGroup>
       <WorkingDirectory ParameterType="System.String" Required="true" />
       <ProjectFiles ParameterType="System.String" Required="false" />
+      <IsDesignTimeBuild ParameterType="System.String" Required="false" />
       <ProjectAddedLines ParameterType="System.Int32" Output="true" />
       <ProjectBaselineLines ParameterType="System.Int32" Output="true" />
       <SolutionAddedLines ParameterType="System.Int32" Output="true" />
@@ -40,6 +41,7 @@ namespace Architecture.Analyzer.Build
     {
         public string WorkingDirectory { get; set; }
         public string ProjectFiles { get; set; }
+        public string IsDesignTimeBuild { get; set; }
 
         [Output] public int ProjectAddedLines { get; set; }
         [Output] public int ProjectBaselineLines { get; set; }
@@ -128,6 +130,7 @@ namespace Architecture.Analyzer.Build
                     }
                 }
 
+                LogBudgetGauge();
                 return true;
             }
             catch (Exception exception)
@@ -214,6 +217,188 @@ namespace Architecture.Analyzer.Build
                 return null; // git is not installed or not on PATH.
             }
         }
+
+        // Prints a per-build "gauge" so the LOC budget is visible continuously (not only when it is
+        // exceeded). It reads the same loc_budget_percent_* keys from the project's .editorconfig
+        // chain that the analyzer enforces, and mirrors the analyzer's budget formula. Enforcement
+        // stays with ARCH008/ARCH009; this message is purely informational.
+        private void LogBudgetGauge()
+        {
+            // The message is skipped during IDE design-time builds (they run constantly) — the
+            // [Output] counts are still produced so live analyzer squiggles keep working.
+            if (!string.IsNullOrEmpty(IsDesignTimeBuild)
+                && IsDesignTimeBuild.Trim().Equals("true", StringComparison.OrdinalIgnoreCase))
+            {
+                return;
+            }
+
+            int projectPercent, globalPercent;
+            ReadBudgetPercents(out projectPercent, out globalPercent);
+
+            if (projectPercent > 0)
+            {
+                LogGaugeLine("project", ProjectAddedLines, ProjectBaselineLines, projectPercent, "ARCH009");
+            }
+
+            if (globalPercent > 0)
+            {
+                LogGaugeLine("solution", SolutionAddedLines, SolutionBaselineLines, globalPercent, "ARCH008");
+            }
+        }
+
+        private void LogGaugeLine(string scope, int added, int baseline, int percent, string ruleId)
+        {
+            var budget = ComputeBudget(baseline, percent);
+            if (budget <= 0)
+            {
+                Log.LogMessage(MessageImportance.High, string.Format(
+                    "[Architecture.Analyzer] LOC budget ({0}): {1} line(s) added since HEAD - budget inactive (baseline {2}, {3}% configured)",
+                    scope, added, baseline, percent));
+                return;
+            }
+
+            var usage = (int)Math.Round(added * 100.0 / budget);
+            var status = added > budget ? "  >>> OVER BUDGET (" + ruleId + ")" : string.Empty;
+            Log.LogMessage(MessageImportance.High, string.Format(
+                "[Architecture.Analyzer] LOC budget ({0}): {1}/{2} line(s) added since HEAD ({3}% of the {4}% budget on {5} baseline line(s)){6}",
+                scope, added, budget, usage, percent, baseline, status));
+        }
+
+        // Mirror of the analyzer's CalculateBudget: ceil(baseline * percent / 100), at least 1;
+        // 0 (inactive) when there is no baseline or no percentage.
+        private static int ComputeBudget(int baseline, int percent)
+        {
+            if (baseline <= 0 || percent <= 0)
+            {
+                return 0;
+            }
+
+            var budget = (int)Math.Ceiling(baseline * percent / 100.0);
+            return budget < 1 ? 1 : budget;
+        }
+
+        private void ReadBudgetPercents(out int projectPercent, out int globalPercent)
+        {
+            projectPercent = 0;
+            globalPercent = 0;
+
+            foreach (var file in CollectEditorConfigs())
+            {
+                string section = null; // null = preamble (applies to every file)
+                foreach (var raw in File.ReadAllLines(file))
+                {
+                    var line = raw.Trim();
+                    if (line.Length == 0 || line[0] == '#' || line[0] == ';')
+                    {
+                        continue;
+                    }
+
+                    if (line[0] == '[' && line[line.Length - 1] == ']')
+                    {
+                        section = line.Substring(1, line.Length - 2).Trim();
+                        continue;
+                    }
+
+                    if (!SectionAppliesToCSharp(section))
+                    {
+                        continue;
+                    }
+
+                    var eq = line.IndexOf('=');
+                    if (eq <= 0)
+                    {
+                        continue;
+                    }
+
+                    var key = line.Substring(0, eq).Trim();
+                    int parsed;
+                    if (!int.TryParse(line.Substring(eq + 1).Trim(), out parsed) || parsed <= 0)
+                    {
+                        continue;
+                    }
+
+                    if (key.Equals("architecture_analyzer.loc_budget_percent_project", StringComparison.OrdinalIgnoreCase))
+                    {
+                        projectPercent = parsed;
+                    }
+                    else if (key.Equals("architecture_analyzer.loc_budget_percent_global", StringComparison.OrdinalIgnoreCase))
+                    {
+                        globalPercent = parsed;
+                    }
+                }
+            }
+        }
+
+        // .editorconfig files from the repo root down to the project directory (nearer overrides
+        // farther), stopping the upward walk at a file that declares "root = true".
+        private List<string> CollectEditorConfigs()
+        {
+            var found = new List<string>();
+            var dir = new DirectoryInfo(WorkingDirectory);
+            while (dir != null)
+            {
+                var path = Path.Combine(dir.FullName, ".editorconfig");
+                if (File.Exists(path))
+                {
+                    found.Add(path);
+                    if (DeclaresRoot(path))
+                    {
+                        break;
+                    }
+                }
+
+                if (_repoRoot != null
+                    && string.Equals(dir.FullName.TrimEnd('\\', '/'), _repoRoot.TrimEnd('\\', '/'), StringComparison.OrdinalIgnoreCase))
+                {
+                    break;
+                }
+
+                dir = dir.Parent;
+            }
+
+            found.Reverse(); // farthest (root-most) first, so nearer files override
+            return found;
+        }
+
+        private static bool DeclaresRoot(string file)
+        {
+            foreach (var raw in File.ReadAllLines(file))
+            {
+                var line = raw.Trim();
+                if (line.Length == 0 || line[0] == '#' || line[0] == ';')
+                {
+                    continue;
+                }
+
+                if (line[0] == '[')
+                {
+                    return false; // "root" must appear before any section
+                }
+
+                var eq = line.IndexOf('=');
+                if (eq > 0
+                    && line.Substring(0, eq).Trim().Equals("root", StringComparison.OrdinalIgnoreCase)
+                    && line.Substring(eq + 1).Trim().Equals("true", StringComparison.OrdinalIgnoreCase))
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        // Accepts the sections under which these keys are realistically placed: the preamble, [*],
+        // [*.cs], and brace sets that include cs (e.g. [*.{cs,vb}]). Anything else is ignored so a
+        // key scoped to, say, [*.csproj] is not mistaken for a C# rule.
+        private static bool SectionAppliesToCSharp(string section)
+        {
+            if (section == null || section == "*" || section == "*.cs")
+            {
+                return true;
+            }
+
+            return section.IndexOf('{') >= 0 && section.IndexOf("cs", StringComparison.OrdinalIgnoreCase) >= 0;
+        }
     }
 }
       ]]></Code>
@@ -223,7 +408,8 @@ namespace Architecture.Analyzer.Build
   <Target Name="_ComputeArchitectureLocBudget" BeforeTargets="GenerateMSBuildEditorConfigFileCore">
     <ComputeLocBudget
       WorkingDirectory="$(MSBuildProjectDirectory)"
-      ProjectFiles="@(Compile->'%(FullPath)')">
+      ProjectFiles="@(Compile->'%(FullPath)')"
+      IsDesignTimeBuild="$(DesignTimeBuild)">
       <Output TaskParameter="ProjectAddedLines" PropertyName="ArchitectureLocProjectAddedLines" />
       <Output TaskParameter="ProjectBaselineLines" PropertyName="ArchitectureLocProjectBaselineLines" />
       <Output TaskParameter="SolutionAddedLines" PropertyName="ArchitectureLocSolutionAddedLines" />

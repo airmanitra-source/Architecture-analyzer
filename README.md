@@ -160,6 +160,8 @@ dotnet build /p:ArchitectureLocProjectBaselineLines=1000 \
              /p:ArchitectureLocSolutionAddedLines=120
 ```
 
+**Per-build gauge.** Whenever a budget percentage is set, the shipped MSBuild target prints the current usage on **every** build (project and solution), e.g. `[Architecture.Analyzer] LOC budget (project): 12/50 line(s) added since HEAD (24% of the 20% budget on 250 baseline line(s))`. This makes the pressure visible continuously — not only when the budget is blown — so you can course-correct before hitting the wall. Going over adds a `>>> OVER BUDGET (ARCHxxx)` marker (and ARCH008/ARCH009 still fail the build). The message reads the same `loc_budget_percent_*` keys from your `.editorconfig`, and is suppressed during IDE design-time builds.
+
 ### ARCH010 — Required folder per project
 
 Enforce that a given project (matched by assembly name) contains at least one file under a specific folder. Same folder separator flexibility as ARCH001; commas separate multiple required folders for the same project; semicolons separate the project rules.
