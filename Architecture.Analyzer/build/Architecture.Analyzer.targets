@@ -31,6 +31,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Globalization;
 using System.IO;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
@@ -235,33 +236,40 @@ namespace Architecture.Analyzer.Build
             int projectPercent, globalPercent;
             ReadBudgetPercents(out projectPercent, out globalPercent);
 
+            // French by default (the analyzer's neutral catalog is French); English when the build's
+            // UI culture is English - mirrors how the ARCHxxx diagnostics localize.
+            var french = !CultureInfo.CurrentUICulture.TwoLetterISOLanguageName.Equals("en", StringComparison.OrdinalIgnoreCase);
+
             if (projectPercent > 0)
             {
-                LogGaugeLine("project", ProjectAddedLines, ProjectBaselineLines, projectPercent, "ARCH009");
+                LogGaugeLine(french, french ? "projet" : "project", ProjectAddedLines, ProjectBaselineLines, projectPercent, "ARCH009");
             }
 
             if (globalPercent > 0)
             {
-                LogGaugeLine("solution", SolutionAddedLines, SolutionBaselineLines, globalPercent, "ARCH008");
+                LogGaugeLine(french, "solution", SolutionAddedLines, SolutionBaselineLines, globalPercent, "ARCH008");
             }
         }
 
-        private void LogGaugeLine(string scope, int added, int baseline, int percent, string ruleId)
+        private void LogGaugeLine(bool french, string scope, int added, int baseline, int percent, string ruleId)
         {
             var budget = ComputeBudget(baseline, percent);
             if (budget <= 0)
             {
-                Log.LogMessage(MessageImportance.High, string.Format(
-                    "[Architecture.Analyzer] LOC budget ({0}): {1} line(s) added since HEAD - budget inactive (baseline {2}, {3}% configured)",
-                    scope, added, baseline, percent));
+                Log.LogMessage(MessageImportance.High, french
+                    ? string.Format("[Architecture.Analyzer] budget LOC ({0}) : {1} ligne(s) ajoutée(s) depuis HEAD - budget inactif (référence {2} ligne(s), {3}% configuré)", scope, added, baseline, percent)
+                    : string.Format("[Architecture.Analyzer] LOC budget ({0}): {1} line(s) added since HEAD - budget inactive (baseline {2}, {3}% configured)", scope, added, baseline, percent));
                 return;
             }
 
             var usage = (int)Math.Round(added * 100.0 / budget);
-            var status = added > budget ? "  >>> OVER BUDGET (" + ruleId + ")" : string.Empty;
-            Log.LogMessage(MessageImportance.High, string.Format(
-                "[Architecture.Analyzer] LOC budget ({0}): {1}/{2} line(s) added since HEAD ({3}% of the {4}% budget on {5} baseline line(s)){6}",
-                scope, added, budget, usage, percent, baseline, status));
+            var status = added > budget
+                ? (french ? "  >>> BUDGET DÉPASSÉ (" + ruleId + ")" : "  >>> OVER BUDGET (" + ruleId + ")")
+                : string.Empty;
+
+            Log.LogMessage(MessageImportance.High, french
+                ? string.Format("[Architecture.Analyzer] budget LOC ({0}) : {1}/{2} ligne(s) ajoutée(s) depuis HEAD ({3}% du budget de {4}% sur {5} ligne(s) de référence){6}", scope, added, budget, usage, percent, baseline, status)
+                : string.Format("[Architecture.Analyzer] LOC budget ({0}): {1}/{2} line(s) added since HEAD ({3}% of the {4}% budget on {5} baseline line(s)){6}", scope, added, budget, usage, percent, baseline, status));
         }
 
         // Mirror of the analyzer's CalculateBudget: ceil(baseline * percent / 100), at least 1;
