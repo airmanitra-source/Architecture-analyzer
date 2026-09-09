@@ -164,6 +164,12 @@
     <value>Concaténation de chaînes avec '+' interdite</value>
   </data>
   <data name="StringConcatenationMessageFormat" xml:space="preserve">
-    <value>N'utilisez pas '+' ou '+=' pour concaténer des chaînes : utilisez un StringBuilder (ou l'interpolation de chaînes pour les cas simples).</value>
+    <value>N'utilisez pas '+' ou '+=' pour concaténer des chaînes : utilisez un StringBuilder.</value>
+  </data>
+  <data name="StringInterpolationTitle" xml:space="preserve">
+    <value>Interpolation de chaînes interdite</value>
+  </data>
+  <data name="StringInterpolationMessageFormat" xml:space="preserve">
+    <value>N'utilisez pas l'interpolation de chaînes ($"...") : utilisez un StringBuilder.</value>
   </data>
 </root>

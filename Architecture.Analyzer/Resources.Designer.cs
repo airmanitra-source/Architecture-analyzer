@@ -370,11 +370,29 @@ namespace Architecture.Analyzer {
         }
 
         /// <summary>
-        ///   Recherche une chaîne localisée semblable à N&apos;utilisez pas &apos;+&apos; ou &apos;+=&apos; pour concaténer des chaînes : utilisez un StringBuilder (ou l&apos;interpolation de chaînes pour les cas simples)..
+        ///   Recherche une chaîne localisée semblable à N&apos;utilisez pas &apos;+&apos; ou &apos;+=&apos; pour concaténer des chaînes : utilisez un StringBuilder..
         /// </summary>
         internal static string StringConcatenationMessageFormat {
             get {
                 return ResourceManager.GetString("StringConcatenationMessageFormat", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Recherche une chaîne localisée semblable à Interpolation de chaînes interdite.
+        /// </summary>
+        internal static string StringInterpolationTitle {
+            get {
+                return ResourceManager.GetString("StringInterpolationTitle", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Recherche une chaîne localisée semblable à N&apos;utilisez pas l&apos;interpolation de chaînes ($&quot;...&quot;) : utilisez un StringBuilder..
+        /// </summary>
+        internal static string StringInterpolationMessageFormat {
+            get {
+                return ResourceManager.GetString("StringInterpolationMessageFormat", resourceCulture);
             }
         }
     }

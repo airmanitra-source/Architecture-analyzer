@@ -31,6 +31,7 @@ Adding the package drops a default `.editorconfig` at the consumer project root 
 | `ARCH015` | Method name is at least N characters long | `architecture_analyzer.min_method_name_length` |
 | `ARCH016` | A class whose name matches pattern X must not accept a method parameter whose type matches pattern Y | `architecture_analyzer.method_argument_type_barrier` |
 | `ARCH017` | Forbids `+` / `+=` string concatenation — use a `StringBuilder` | (no configuration) |
+| `ARCH018` | Forbids string interpolation (`$"..."`) — use a `StringBuilder` | (no configuration) |
 
 ## Configuring the rules
 
@@ -247,13 +248,26 @@ With the config above, any class whose name ends with `Module` (e.g. `CustomerMo
 
 ### ARCH017 — No `+` string concatenation
 
-Forbids concatenating strings with `+` or `+=` — use a `StringBuilder` instead (or string interpolation for simple cases). Enabled by default; no configuration. A concatenation chain (`a + b + c`) is reported once, at the top of the chain.
+Forbids concatenating strings with `+` or `+=` — use a `StringBuilder` instead. Enabled by default; no configuration. A concatenation chain (`a + b + c`) is reported once, at the top of the chain.
 
 Two cases are deliberately **allowed**: compile-time-constant concatenations (literal-only expressions such as `"a" + "b"` and `const` fields — the compiler folds them, they cost nothing at runtime, and a `const` cannot use a `StringBuilder`), and user-defined `+` operators that return a string. Downgrade or silence per path with the usual override:
 
 ```ini
 [*.cs]
 dotnet_diagnostic.ARCH017.severity = warning
+```
+
+### ARCH018 — No string interpolation
+
+Forbids string interpolation (`$"..."`) — use a `StringBuilder` instead. Enabled by default; no configuration. It is a sibling of ARCH017 with its own id, so you can tune the two independently. Each `$"..."` is one diagnostic (however many holes it has).
+
+**Allowed:** a hole-free interpolated string (`$"plain text"`) and a compile-time-constant interpolated string (all-constant holes / `const` fields — folded by the compiler, and a `const` cannot use a `StringBuilder`).
+
+Interpolation is pervasive (logging, formatting a single value, …), so shipping this as an error is aggressive — scope it to the paths you care about, or downgrade it:
+
+```ini
+[*.cs]
+dotnet_diagnostic.ARCH018.severity = warning
 ```
 
 ## Full worked example

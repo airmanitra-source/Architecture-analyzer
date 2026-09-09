@@ -4,63 +4,99 @@ namespace Architecture.Analyzer.Tests;
 
 public sealed class StringConcatenationAnalyzerTests
 {
-    // Wraps a method body whose parameters a, b, c are strings, then counts ARCH017.
-    private static async Task<int> CountAsync(string body)
+    private const string Concat = StringConcatenationAnalyzer.ConcatenationDiagnosticId;   // ARCH017
+    private const string Interp = StringConcatenationAnalyzer.InterpolationDiagnosticId;    // ARCH018
+
+    // Wraps a method body whose parameters a, b, c are strings, then counts diagnostics of `id`.
+    private static async Task<int> CountAsync(string body, string id)
     {
         var source = "public class C { public void M(string a, string b, string c) {\n" + body + "\n} }";
         var diagnostics = await ArchitectureAnalyzerTestRunner.AnalyzeAsync(source, new StringConcatenationAnalyzer(), "C.cs");
-        return diagnostics.Count(diagnostic => diagnostic.Id == StringConcatenationAnalyzer.DiagnosticId);
+        return diagnostics.Count(diagnostic => diagnostic.Id == id);
     }
 
-    [Fact]
-    public async Task ReportsForSimpleConcatenation() => Assert.Equal(1, await CountAsync("var s = a + b;"));
+    // --- ARCH017: '+' / '+=' concatenation ---
 
     [Fact]
-    public async Task ReportsForSimpleAssignmentConcatenation() => Assert.Equal(1, await CountAsync("a = b + c;"));
+    public async Task ReportsForSimpleConcatenation() => Assert.Equal(1, await CountAsync("var s = a + b;", Concat));
 
     [Fact]
-    public async Task ReportsForCompoundAssignment() => Assert.Equal(1, await CountAsync("a += b;"));
+    public async Task ReportsForSimpleAssignmentConcatenation() => Assert.Equal(1, await CountAsync("a = b + c;", Concat));
 
     [Fact]
-    public async Task ReportsForStringPlusNonString() => Assert.Equal(1, await CountAsync("var s = a + 1;"));
+    public async Task ReportsForCompoundAssignment() => Assert.Equal(1, await CountAsync("a += b;", Concat));
 
     [Fact]
-    public async Task ReportsForLiteralPlusVariable() => Assert.Equal(1, await CountAsync("var s = \"prefix \" + a;"));
+    public async Task ReportsForStringPlusNonString() => Assert.Equal(1, await CountAsync("var s = a + 1;", Concat));
 
     [Fact]
-    public async Task ReportsConcatenationChainExactlyOnce() => Assert.Equal(1, await CountAsync("var s = a + b + c;"));
+    public async Task ReportsForLiteralPlusVariable() => Assert.Equal(1, await CountAsync("var s = \"prefix \" + a;", Concat));
 
     [Fact]
-    public async Task ReportsCompoundWithNestedConcatenationOnce() => Assert.Equal(1, await CountAsync("a += b + c;"));
+    public async Task ReportsConcatenationChainExactlyOnce() => Assert.Equal(1, await CountAsync("var s = a + b + c;", Concat));
 
     [Fact]
-    public async Task DoesNotReportNumericAddition() => Assert.Equal(0, await CountAsync("var n = 1 + 2;"));
+    public async Task ReportsCompoundWithNestedConcatenationOnce() => Assert.Equal(1, await CountAsync("a += b + c;", Concat));
 
     [Fact]
-    public async Task DoesNotReportStringInterpolation() => Assert.Equal(0, await CountAsync("var s = $\"{a}{b}\";"));
+    public async Task DoesNotReportNumericAddition() => Assert.Equal(0, await CountAsync("var n = 1 + 2;", Concat));
 
     [Fact]
-    public async Task DoesNotReportConstantLiteralConcatenation() => Assert.Equal(0, await CountAsync("var s = \"x\" + \"y\";"));
+    public async Task DoesNotReportConstantLiteralConcatenation() => Assert.Equal(0, await CountAsync("var s = \"x\" + \"y\";", Concat));
 
     [Fact]
     public async Task DoesNotReportConstFieldConcatenation()
     {
-        // A const cannot use a StringBuilder, and the literals are folded at compile time.
         const string source = "public class C { private const string X = \"a\" + \"b\" + \"c\"; }";
 
         var diagnostics = await ArchitectureAnalyzerTestRunner.AnalyzeAsync(source, new StringConcatenationAnalyzer(), "C.cs");
 
-        Assert.DoesNotContain(diagnostics, diagnostic => diagnostic.Id == StringConcatenationAnalyzer.DiagnosticId);
+        Assert.DoesNotContain(diagnostics, diagnostic => diagnostic.Id == Concat);
     }
 
     [Fact]
     public async Task DoesNotReportUserDefinedPlusOperatorReturningString()
     {
-        // 'a + b' resolves to a user-defined operator, not the built-in string concatenation.
         const string source = "public struct Money { public static string operator +(Money a, Money b) => \"x\"; public string Combine(Money x, Money y) => x + y; }";
 
         var diagnostics = await ArchitectureAnalyzerTestRunner.AnalyzeAsync(source, new StringConcatenationAnalyzer(), "Money.cs");
 
-        Assert.DoesNotContain(diagnostics, diagnostic => diagnostic.Id == StringConcatenationAnalyzer.DiagnosticId);
+        Assert.DoesNotContain(diagnostics, diagnostic => diagnostic.Id == Concat);
     }
+
+    // --- ARCH018: string interpolation ---
+
+    [Fact]
+    public async Task ReportsForInterpolationWithSingleHole() => Assert.Equal(1, await CountAsync("var s = $\"{a}\";", Interp));
+
+    [Fact]
+    public async Task ReportsForInterpolationWithTextAndHoles() => Assert.Equal(1, await CountAsync("var s = $\"Hello {a} and {b}\";", Interp));
+
+    [Fact]
+    public async Task ReportsInterpolationOncePerLiteral() => Assert.Equal(1, await CountAsync("var s = $\"{a}{b}{c}\";", Interp));
+
+    [Fact]
+    public async Task DoesNotReportInterpolationWithoutHoles() => Assert.Equal(0, await CountAsync("var s = $\"just text\";", Interp));
+
+    [Fact]
+    public async Task DoesNotReportPlainStringLiteral() => Assert.Equal(0, await CountAsync("var s = \"plain\";", Interp));
+
+    [Fact]
+    public async Task DoesNotReportConstantInterpolatedString()
+    {
+        // C# 10 allows a const interpolated string when every hole is a constant string; it folds.
+        const string source = "public class C { private const string Y = \"y\"; private const string X = $\"a{Y}b\"; }";
+
+        var diagnostics = await ArchitectureAnalyzerTestRunner.AnalyzeAsync(source, new StringConcatenationAnalyzer(), "C.cs");
+
+        Assert.DoesNotContain(diagnostics, diagnostic => diagnostic.Id == Interp);
+    }
+
+    // --- Independence: each pattern raises only its own rule ---
+
+    [Fact]
+    public async Task ConcatenationDoesNotRaiseInterpolationRule() => Assert.Equal(0, await CountAsync("var s = a + b;", Interp));
+
+    [Fact]
+    public async Task InterpolationDoesNotRaiseConcatenationRule() => Assert.Equal(0, await CountAsync("var s = $\"{a}{b}\";", Concat));
 }

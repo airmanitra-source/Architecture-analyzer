@@ -28,5 +28,31 @@ internal sealed class StringConcatenationRuleService : IStringConcatenationRuleS
         }
     }
 
+    public bool IsForbiddenInterpolation(IOperation? operation)
+    {
+        if (operation is not IInterpolatedStringOperation interpolated)
+        {
+            return false;
+        }
+
+        // A compile-time constant interpolated string (all-constant holes, or none) is folded and
+        // costs nothing at runtime — and a const cannot use a StringBuilder — so it is allowed.
+        if (interpolated.ConstantValue.HasValue)
+        {
+            return false;
+        }
+
+        // Allowed when there is no real '{expr}' hole (a hole-free $"text" is just a literal).
+        foreach (var part in interpolated.Parts)
+        {
+            if (part is IInterpolationOperation)
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     private static bool IsString(ITypeSymbol? type) => type is { SpecialType: SpecialType.System_String };
 }

@@ -8,23 +8,35 @@ namespace Architecture.Analyzer;
 [DiagnosticAnalyzer(LanguageNames.CSharp)]
 public sealed class StringConcatenationAnalyzer : DiagnosticAnalyzer
 {
-    public const string DiagnosticId = "ARCH017";
+    public const string ConcatenationDiagnosticId = "ARCH017";
+    public const string InterpolationDiagnosticId = "ARCH018";
 
-    private static readonly LocalizableString Title = new LocalizableResourceString(nameof(Resources.StringConcatenationTitle), Resources.ResourceManager, typeof(Resources));
-    private static readonly LocalizableString MessageFormat = new LocalizableResourceString(nameof(Resources.StringConcatenationMessageFormat), Resources.ResourceManager, typeof(Resources));
     private const string Category = "Architecture";
+
+    private static readonly LocalizableString ConcatenationTitle = new LocalizableResourceString(nameof(Resources.StringConcatenationTitle), Resources.ResourceManager, typeof(Resources));
+    private static readonly LocalizableString ConcatenationMessageFormat = new LocalizableResourceString(nameof(Resources.StringConcatenationMessageFormat), Resources.ResourceManager, typeof(Resources));
+    private static readonly LocalizableString InterpolationTitle = new LocalizableResourceString(nameof(Resources.StringInterpolationTitle), Resources.ResourceManager, typeof(Resources));
+    private static readonly LocalizableString InterpolationMessageFormat = new LocalizableResourceString(nameof(Resources.StringInterpolationMessageFormat), Resources.ResourceManager, typeof(Resources));
 
     private readonly IStringConcatenationRuleService _ruleService;
 
-    private static readonly DiagnosticDescriptor Rule = new(
-        DiagnosticId,
-        Title,
-        MessageFormat,
+    private static readonly DiagnosticDescriptor ConcatenationRule = new(
+        ConcatenationDiagnosticId,
+        ConcatenationTitle,
+        ConcatenationMessageFormat,
         Category,
         DiagnosticSeverity.Error,
         isEnabledByDefault: true);
 
-    public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics => ImmutableArray.Create(Rule);
+    private static readonly DiagnosticDescriptor InterpolationRule = new(
+        InterpolationDiagnosticId,
+        InterpolationTitle,
+        InterpolationMessageFormat,
+        Category,
+        DiagnosticSeverity.Error,
+        isEnabledByDefault: true);
+
+    public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics => ImmutableArray.Create(ConcatenationRule, InterpolationRule);
 
     public StringConcatenationAnalyzer()
         : this(new StringConcatenationRuleService())
@@ -40,24 +52,31 @@ public sealed class StringConcatenationAnalyzer : DiagnosticAnalyzer
     {
         context.ConfigureGeneratedCodeAnalysis(GeneratedCodeAnalysisFlags.None);
         context.EnableConcurrentExecution();
-        context.RegisterOperationAction(AnalyzeOperation, OperationKind.Binary, OperationKind.CompoundAssignment);
+        context.RegisterOperationAction(
+            AnalyzeOperation,
+            OperationKind.Binary,
+            OperationKind.CompoundAssignment,
+            OperationKind.InterpolatedString);
     }
 
     private void AnalyzeOperation(OperationAnalysisContext context)
     {
         var operation = context.Operation;
-        if (!_ruleService.IsForbiddenConcatenation(operation))
+
+        // ARCH018 - string interpolation. Each $"..." is a single operation (holes are parts),
+        // so there is no chain to de-duplicate.
+        if (_ruleService.IsForbiddenInterpolation(operation))
         {
+            context.ReportDiagnostic(Diagnostic.Create(InterpolationRule, operation.Syntax.GetLocation()));
             return;
         }
 
-        // Report once per concatenation chain: skip when the parent is itself a forbidden
-        // concatenation (the inner 'a + b' of 'a + b + c', or the 'a + b' of 's += a + b').
-        if (_ruleService.IsForbiddenConcatenation(operation.Parent))
+        // ARCH017 - '+' / '+=' concatenation. Report once per chain: skip when the parent is
+        // itself a forbidden concatenation (the inner 'a + b' of 'a + b + c', or of 's += a + b').
+        if (_ruleService.IsForbiddenConcatenation(operation)
+            && !_ruleService.IsForbiddenConcatenation(operation.Parent))
         {
-            return;
+            context.ReportDiagnostic(Diagnostic.Create(ConcatenationRule, operation.Syntax.GetLocation()));
         }
-
-        context.ReportDiagnostic(Diagnostic.Create(Rule, operation.Syntax.GetLocation()));
     }
 }

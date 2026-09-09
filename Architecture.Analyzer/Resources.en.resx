@@ -164,6 +164,12 @@
     <value>String concatenation with '+' is forbidden</value>
   </data>
   <data name="StringConcatenationMessageFormat" xml:space="preserve">
-    <value>Do not use '+' or '+=' to concatenate strings: use a StringBuilder instead (or string interpolation for simple cases).</value>
+    <value>Do not use '+' or '+=' to concatenate strings: use a StringBuilder instead.</value>
+  </data>
+  <data name="StringInterpolationTitle" xml:space="preserve">
+    <value>String interpolation is forbidden</value>
+  </data>
+  <data name="StringInterpolationMessageFormat" xml:space="preserve">
+    <value>Do not use string interpolation ($"..."): use a StringBuilder instead.</value>
   </data>
 </root>
