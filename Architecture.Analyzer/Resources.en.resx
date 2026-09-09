@@ -160,4 +160,10 @@
   <data name="MethodArgumentTypeBarrierMessageFormat" xml:space="preserve">
     <value>Method '{0}' of type '{1}' must not have a parameter of type '{2}': a type matching the pattern '{3}' must not accept a type matching the pattern '{4}'.</value>
   </data>
+  <data name="StringConcatenationTitle" xml:space="preserve">
+    <value>String concatenation with '+' is forbidden</value>
+  </data>
+  <data name="StringConcatenationMessageFormat" xml:space="preserve">
+    <value>Do not use '+' or '+=' to concatenate strings: use a StringBuilder instead (or string interpolation for simple cases).</value>
+  </data>
 </root>

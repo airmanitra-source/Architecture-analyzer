@@ -359,5 +359,23 @@ namespace Architecture.Analyzer {
                 return ResourceManager.GetString("MethodArgumentTypeBarrierMessageFormat", resourceCulture);
             }
         }
+
+        /// <summary>
+        ///   Recherche une chaîne localisée semblable à Concaténation de chaînes avec &apos;+&apos; interdite.
+        /// </summary>
+        internal static string StringConcatenationTitle {
+            get {
+                return ResourceManager.GetString("StringConcatenationTitle", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Recherche une chaîne localisée semblable à N&apos;utilisez pas &apos;+&apos; ou &apos;+=&apos; pour concaténer des chaînes : utilisez un StringBuilder (ou l&apos;interpolation de chaînes pour les cas simples)..
+        /// </summary>
+        internal static string StringConcatenationMessageFormat {
+            get {
+                return ResourceManager.GetString("StringConcatenationMessageFormat", resourceCulture);
+            }
+        }
     }
 }

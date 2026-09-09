@@ -30,6 +30,7 @@ Adding the package drops a default `.editorconfig` at the consumer project root 
 | `ARCH014` | Class name is at least N characters long | `architecture_analyzer.min_class_name_length` |
 | `ARCH015` | Method name is at least N characters long | `architecture_analyzer.min_method_name_length` |
 | `ARCH016` | A class whose name matches pattern X must not accept a method parameter whose type matches pattern Y | `architecture_analyzer.method_argument_type_barrier` |
+| `ARCH017` | Forbids `+` / `+=` string concatenation — use a `StringBuilder` | (no configuration) |
 
 ## Configuring the rules
 
@@ -243,6 +244,17 @@ architecture_analyzer.method_argument_type_barrier = *Module>*DataModel
 ```
 
 With the config above, any class whose name ends with `Module` (e.g. `CustomerModule`) reports ARCH016 when one of its methods declares a parameter whose type ends with `DataModel` (e.g. `void Register(CustomerDataModel model)`). The check looks through arrays and generic type arguments, so `CustomerDataModel[]` and `Wrapper<CustomerDataModel>` are caught too. Matching is ordinal (case-sensitive), so a `CustomerViewModel` parameter does **not** match `*DataModel`. Only methods declared in a **class** are checked (records included); interfaces and structs are out of scope, and a generic method's own type parameters (e.g. `Register<TDataModel>(TDataModel item)`) are never treated as a forbidden type.
+
+### ARCH017 — No `+` string concatenation
+
+Forbids concatenating strings with `+` or `+=` — use a `StringBuilder` instead (or string interpolation for simple cases). Enabled by default; no configuration. A concatenation chain (`a + b + c`) is reported once, at the top of the chain.
+
+Two cases are deliberately **allowed**: compile-time-constant concatenations (literal-only expressions such as `"a" + "b"` and `const` fields — the compiler folds them, they cost nothing at runtime, and a `const` cannot use a `StringBuilder`), and user-defined `+` operators that return a string. Downgrade or silence per path with the usual override:
+
+```ini
+[*.cs]
+dotnet_diagnostic.ARCH017.severity = warning
+```
 
 ## Full worked example
 
