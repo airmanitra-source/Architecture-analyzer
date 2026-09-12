@@ -34,3 +34,11 @@ architecture_analyzer.model_folder_allowed_suffixes = Models/Business=BusinessMo
 #   *Module*  -> contient
 # Plusieurs règles séparées par ';' (ou ','). Désactivée si la clé est absente.
 # architecture_analyzer.method_argument_type_barrier = *Module>*DataModel
+
+# Duplication structurelle de methodes — ARCH019.
+# Compare la FORME du corps des methodes (suite de types de jetons, identifiants et
+# litteraux ignores) : un copier-coller-renommer est donc detecte.
+#   duplicate_code_min_tokens          : taille minimale d'un corps pris en compte (defaut 30)
+#   duplicate_code_similarity_percent  : seuil de similarite, 100 = forme identique (defaut 90)
+# architecture_analyzer.duplicate_code_min_tokens = 30
+# architecture_analyzer.duplicate_code_similarity_percent = 90

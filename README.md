@@ -42,6 +42,7 @@ Adding the package drops a default `.editorconfig` at the consumer project root 
 | `ARCH016` | A class whose name matches pattern X must not accept a method parameter whose type matches pattern Y | `architecture_analyzer.method_argument_type_barrier` |
 | `ARCH017` | Forbids `+` / `+=` string concatenation — use a `StringBuilder` | (no configuration) |
 | `ARCH018` | Forbids string interpolation (`$"..."`) — use a `StringBuilder` | (no configuration) |
+| `ARCH019` | Detects a method whose body duplicates another one (copy/paste, renamed) | `architecture_analyzer.duplicate_code_similarity_percent` / `..._min_tokens` |
 
 ## Configuring the rules
 
@@ -278,6 +279,30 @@ Interpolation is pervasive (logging, formatting a single value, …), so shippin
 ```ini
 [*.cs]
 dotnet_diagnostic.ARCH018.severity = warning
+```
+
+### ARCH019 — Duplicated method bodies
+
+Flags a method whose body has the same **shape** as another method in the same compilation. The comparison runs on the sequence of token *kinds*, with identifiers and literal values discarded — so renaming the variables does not hide a copy. That is precisely how a coding agent duplicates a helper instead of reusing it.
+
+```ini
+[*.cs]
+# Minimum body size, in tokens, before a method is considered at all. Default: 30.
+architecture_analyzer.duplicate_code_min_tokens = 30
+
+# How close two bodies must be to be reported, in percent. 100 = identical shape only. Default: 90.
+architecture_analyzer.duplicate_code_similarity_percent = 90
+```
+
+The message names the method to reuse: *"`C.Second` duplicates `C.First` by 100%: reuse `C.First` instead of writing a copy."* Each pair is reported **once**, on whichever method comes later in the source.
+
+**Never reported:** bodies shorter than `duplicate_code_min_tokens` (a shared shape in a 3-line accessor is not duplication), abstract and interface declarations, and generated code. On very large projects (>4000 candidate methods) the rule automatically narrows to exact structural matches so it stays linear.
+
+**Tests repeat structure on purpose** (arrange / act / assert), so exclude them unless you explicitly want that signal:
+
+```ini
+[**/*Tests.cs]
+dotnet_diagnostic.ARCH019.severity = none
 ```
 
 ## Full worked example

@@ -395,5 +395,23 @@ namespace Architecture.Analyzer {
                 return ResourceManager.GetString("StringInterpolationMessageFormat", resourceCulture);
             }
         }
+
+        /// <summary>
+        ///   Recherche une chaîne localisée semblable à Code dupliqué : cette méthode existe déjà.
+        /// </summary>
+        internal static string DuplicateCodeTitle {
+            get {
+                return ResourceManager.GetString("DuplicateCodeTitle", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Recherche une chaîne localisée semblable à La méthode &apos;{0}&apos; duplique &apos;{1}&apos; à {2} % : réutilise &apos;{1}&apos; au lieu d&apos;en écrire une copie..
+        /// </summary>
+        internal static string DuplicateCodeMessageFormat {
+            get {
+                return ResourceManager.GetString("DuplicateCodeMessageFormat", resourceCulture);
+            }
+        }
     }
 }

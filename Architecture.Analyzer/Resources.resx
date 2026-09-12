@@ -172,4 +172,10 @@
   <data name="StringInterpolationMessageFormat" xml:space="preserve">
     <value>N'utilisez pas l'interpolation de chaînes ($"...") : utilisez un StringBuilder.</value>
   </data>
+  <data name="DuplicateCodeTitle" xml:space="preserve">
+    <value>Code dupliqué : cette méthode existe déjà</value>
+  </data>
+  <data name="DuplicateCodeMessageFormat" xml:space="preserve">
+    <value>La méthode '{0}' duplique '{1}' à {2} % : réutilise '{1}' au lieu d'en écrire une copie.</value>
+  </data>
 </root>
