@@ -334,4 +334,4 @@ dotnet_diagnostic.ARCH006.severity = none
 
 ## License
 
-See [LICENSE.txt](LICENSE.txt).
+See [LICENSE.txt](https://github.com/airmanitra-source/Architecture-analyzer/blob/main/Architecture.Analyzer/LICENSE.txt).
