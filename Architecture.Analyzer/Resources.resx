@@ -178,4 +178,10 @@
   <data name="DuplicateCodeMessageFormat" xml:space="preserve">
     <value>La méthode '{0}' duplique '{1}' à {2} % : réutilise '{1}' au lieu d'en écrire une copie.</value>
   </data>
+  <data name="TestRatioTitle" xml:space="preserve">
+    <value>Pas assez de tests pour le code ajouté</value>
+  </data>
+  <data name="TestRatioMessageFormat" xml:space="preserve">
+    <value>Ce prompt ajoute {0} ligne(s) de production pour seulement {1} ligne(s) de test (ratio {2} %, minimum {3} %) : ajoute des tests avant d'aller plus loin.</value>
+  </data>
 </root>

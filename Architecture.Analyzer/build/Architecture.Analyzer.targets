@@ -11,6 +11,8 @@
     <CompilerVisibleProperty Include="ArchitectureLocProjectBaselineLines" />
     <CompilerVisibleProperty Include="ArchitectureLocSolutionAddedLines" />
     <CompilerVisibleProperty Include="ArchitectureLocSolutionBaselineLines" />
+    <CompilerVisibleProperty Include="ArchitectureLocAddedProductionLines" />
+    <CompilerVisibleProperty Include="ArchitectureLocAddedTestLines" />
   </ItemGroup>
 
   <UsingTask
@@ -25,6 +27,8 @@
       <ProjectBaselineLines ParameterType="System.Int32" Output="true" />
       <SolutionAddedLines ParameterType="System.Int32" Output="true" />
       <SolutionBaselineLines ParameterType="System.Int32" Output="true" />
+      <AddedProductionLines ParameterType="System.Int32" Output="true" />
+      <AddedTestLines ParameterType="System.Int32" Output="true" />
     </ParameterGroup>
     <Task>
       <Code Type="Class" Language="cs"><![CDATA[
@@ -49,6 +53,11 @@ namespace Architecture.Analyzer.Build
         [Output] public int SolutionAddedLines { get; set; }
         [Output] public int SolutionBaselineLines { get; set; }
 
+        // Added lines split by destination: tests live in their own project, so the ratio between
+        // the two only makes sense solution-wide.
+        [Output] public int AddedProductionLines { get; set; }
+        [Output] public int AddedTestLines { get; set; }
+
         private string _repoRoot;
 
         public override bool Execute()
@@ -67,6 +76,7 @@ namespace Architecture.Analyzer.Build
                 // Run every following command from the repository root so paths are root-relative and the
                 // whole repository is in scope (ls-files defaults to the current directory otherwise).
                 _repoRoot = root;
+                var testPatterns = ReadTestPatterns();
 
                 var projectFiles = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
                 if (!string.IsNullOrEmpty(ProjectFiles))
@@ -98,6 +108,7 @@ namespace Architecture.Analyzer.Build
 
                     var full = ToFullPath(root, columns[2]);
                     SolutionAddedLines += added;
+                    Accumulate(columns[2], added, testPatterns);
                     if (projectFiles.Contains(full))
                     {
                         ProjectAddedLines += added;
@@ -111,6 +122,7 @@ namespace Architecture.Analyzer.Build
                     var full = ToFullPath(root, relative);
                     var added = CountLines(full);
                     SolutionAddedLines += added;
+                    Accumulate(relative, added, testPatterns);
                     if (projectFiles.Contains(full))
                     {
                         ProjectAddedLines += added;
@@ -248,6 +260,19 @@ namespace Architecture.Analyzer.Build
             if (globalPercent > 0)
             {
                 LogGaugeLine(french, "solution", SolutionAddedLines, SolutionBaselineLines, globalPercent, "ARCH008");
+            }
+
+            var minTestPercent = ReadIntOption("architecture_analyzer.min_test_lines_percent");
+            if (minTestPercent > 0 && AddedProductionLines > 0)
+            {
+                var actual = AddedTestLines * 100 / AddedProductionLines;
+                var status = actual < minTestPercent
+                    ? (french ? "  >>> TESTS INSUFFISANTS (ARCH021)" : "  >>> NOT ENOUGH TESTS (ARCH021)")
+                    : string.Empty;
+
+                Log.LogMessage(MessageImportance.High, french
+                    ? string.Format("[Architecture.Analyzer] ratio tests : {0} ligne(s) de test pour {1} ligne(s) de production ajoutees (ratio {2} %, minimum {3} %){4}", AddedTestLines, AddedProductionLines, actual, minTestPercent, status)
+                    : string.Format("[Architecture.Analyzer] test ratio: {0} test line(s) for {1} production line(s) added (ratio {2}%, minimum {3}%){4}", AddedTestLines, AddedProductionLines, actual, minTestPercent, status));
             }
         }
 
@@ -398,6 +423,95 @@ namespace Architecture.Analyzer.Build
         // Accepts the sections under which these keys are realistically placed: the preamble, [*],
         // [*.cs], and brace sets that include cs (e.g. [*.{cs,vb}]). Anything else is ignored so a
         // key scoped to, say, [*.csproj] is not mistaken for a C# rule.
+        // Splits an added-lines figure between production and tests, according to where the file lives.
+        private void Accumulate(string relativePath, int added, List<string> testPatterns)
+        {
+            if (IsTestFile(relativePath, testPatterns))
+            {
+                AddedTestLines += added;
+            }
+            else
+            {
+                AddedProductionLines += added;
+            }
+        }
+
+        private static bool IsTestFile(string relativePath, List<string> testPatterns)
+        {
+            // Leading slash so a pattern such as "/tests/" also matches a path starting with "tests/".
+            var normalized = "/" + relativePath.Replace('\\', '/').ToLowerInvariant();
+            foreach (var pattern in testPatterns)
+            {
+                if (normalized.IndexOf(pattern, StringComparison.Ordinal) >= 0)
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        private List<string> ReadTestPatterns()
+        {
+            var configured = ReadStringOption("architecture_analyzer.test_file_patterns");
+            var raw = string.IsNullOrEmpty(configured) ? "/tests/;.tests/;tests.cs;test.cs;spec.cs" : configured;
+
+            var patterns = new List<string>();
+            foreach (var entry in raw.Split(new[] { ';', ',' }, StringSplitOptions.RemoveEmptyEntries))
+            {
+                var trimmed = entry.Trim().Replace('\\', '/').ToLowerInvariant();
+                if (trimmed.Length != 0)
+                {
+                    patterns.Add(trimmed);
+                }
+            }
+
+            return patterns;
+        }
+
+        private int ReadIntOption(string key)
+        {
+            var value = ReadStringOption(key);
+            int parsed;
+            return !string.IsNullOrEmpty(value) && int.TryParse(value, out parsed) && parsed > 0 ? parsed : 0;
+        }
+
+        private string ReadStringOption(string key)
+        {
+            string result = null;
+            foreach (var file in CollectEditorConfigs())
+            {
+                string section = null;
+                foreach (var raw in File.ReadAllLines(file))
+                {
+                    var line = raw.Trim();
+                    if (line.Length == 0 || line[0] == '#' || line[0] == ';')
+                    {
+                        continue;
+                    }
+
+                    if (line[0] == '[' && line[line.Length - 1] == ']')
+                    {
+                        section = line.Substring(1, line.Length - 2).Trim();
+                        continue;
+                    }
+
+                    if (!SectionAppliesToCSharp(section))
+                    {
+                        continue;
+                    }
+
+                    var eq = line.IndexOf('=');
+                    if (eq > 0 && line.Substring(0, eq).Trim().Equals(key, StringComparison.OrdinalIgnoreCase))
+                    {
+                        result = line.Substring(eq + 1).Trim(); // nearer files override farther ones
+                    }
+                }
+            }
+
+            return result;
+        }
+
         private static bool SectionAppliesToCSharp(string section)
         {
             if (section == null || section == "*" || section == "*.cs")
@@ -422,6 +536,8 @@ namespace Architecture.Analyzer.Build
       <Output TaskParameter="ProjectBaselineLines" PropertyName="ArchitectureLocProjectBaselineLines" />
       <Output TaskParameter="SolutionAddedLines" PropertyName="ArchitectureLocSolutionAddedLines" />
       <Output TaskParameter="SolutionBaselineLines" PropertyName="ArchitectureLocSolutionBaselineLines" />
+      <Output TaskParameter="AddedProductionLines" PropertyName="ArchitectureLocAddedProductionLines" />
+      <Output TaskParameter="AddedTestLines" PropertyName="ArchitectureLocAddedTestLines" />
     </ComputeLocBudget>
   </Target>
 

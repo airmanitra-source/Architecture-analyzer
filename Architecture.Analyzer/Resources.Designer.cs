@@ -413,5 +413,23 @@ namespace Architecture.Analyzer {
                 return ResourceManager.GetString("DuplicateCodeMessageFormat", resourceCulture);
             }
         }
+
+        /// <summary>
+        ///   Recherche une chaîne localisée semblable à Pas assez de tests pour le code ajouté.
+        /// </summary>
+        internal static string TestRatioTitle {
+            get {
+                return ResourceManager.GetString("TestRatioTitle", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Recherche une chaîne localisée semblable à Ce prompt ajoute {0} ligne(s) de production pour seulement {1} ligne(s) de test (ratio {2} %, minimum {3} %) : ajoute des tests avant d&apos;aller plus loin..
+        /// </summary>
+        internal static string TestRatioMessageFormat {
+            get {
+                return ResourceManager.GetString("TestRatioMessageFormat", resourceCulture);
+            }
+        }
     }
 }

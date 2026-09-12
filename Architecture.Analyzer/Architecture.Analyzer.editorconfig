@@ -42,3 +42,10 @@ architecture_analyzer.model_folder_allowed_suffixes = Models/Business=BusinessMo
 #   duplicate_code_similarity_percent  : seuil de similarite, 100 = forme identique (defaut 90)
 # architecture_analyzer.duplicate_code_min_tokens = 30
 # architecture_analyzer.duplicate_code_similarity_percent = 90
+
+# Ratio tests / code de production par prompt — ARCH021.
+# Mesure a l'echelle de la SOLUTION (les tests vivent dans un autre projet).
+# Regle desactivee si min_test_lines_percent est absent.
+# architecture_analyzer.min_test_lines_percent = 20
+# architecture_analyzer.test_ratio_min_added_lines = 50
+# architecture_analyzer.test_file_patterns = /tests/;.tests/;tests.cs;test.cs;spec.cs

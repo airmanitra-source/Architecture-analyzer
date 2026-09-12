@@ -33,6 +33,7 @@ Adding the package drops a default `.editorconfig` at the consumer project root 
 | `ARCH017` | Forbids `+` / `+=` string concatenation — use a `StringBuilder` | (no configuration) |
 | `ARCH018` | Forbids string interpolation (`$"..."`) — use a `StringBuilder` | (no configuration) |
 | `ARCH019` | Detects a method whose body duplicates another one (copy/paste, renamed) | `architecture_analyzer.duplicate_code_similarity_percent` / `..._min_tokens` |
+| `ARCH021` | A prompt that adds production code must add tests too (solution-wide ratio) | `architecture_analyzer.min_test_lines_percent` + shipped MSBuild target |
 
 ## Configuring the rules
 
@@ -294,6 +295,28 @@ The message names the method to reuse: *"`C.Second` duplicates `C.First` by 100%
 [**/*Tests.cs]
 dotnet_diagnostic.ARCH019.severity = none
 ```
+
+### ARCH021 — Tests required for the code a prompt adds
+
+Caps how much production code a prompt may add **without tests**. The MSBuild target already counts the lines added since `HEAD`; this rule splits that figure between production and test files and compares the two.
+
+The ratio is deliberately **solution-wide**, never per project: tests almost always live in a different project, so a per-project check would see "0 test lines" on the module you just grew.
+
+```ini
+[*.cs]
+# For every 100 production lines added, at least 20 test lines must be added. Rule off when absent.
+architecture_analyzer.min_test_lines_percent = 20
+
+# Changes smaller than this are exempt — demanding tests for a 3-line fix only breeds filler tests.
+architecture_analyzer.test_ratio_min_added_lines = 50
+
+# How a file is recognised as a test file (path substrings / file-name suffixes).
+architecture_analyzer.test_file_patterns = /tests/;.tests/;tests.cs;test.cs;spec.cs
+```
+
+A prompt adding 200 production lines and 10 test lines reports: *"adds 200 production line(s) for only 10 test line(s) (ratio 5%, minimum 20%): add tests before going further."*
+
+Never reported: a prompt that adds no production line (touching only tests), and any change below `test_ratio_min_added_lines`. Like ARCH008/ARCH009 the counter resets at each commit, so the budget is per increment. The per-build gauge prints the current ratio even when it passes, so the pressure is visible before the wall.
 
 ## Full worked example
 
