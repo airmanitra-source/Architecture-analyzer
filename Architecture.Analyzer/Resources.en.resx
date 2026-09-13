@@ -196,4 +196,10 @@
   <data name="ComplexityRatchetMessageFormat" xml:space="preserve">
     <value>Complexity of '{0}' goes from {1} to {2}: it must not degrade. Split the method or simplify its logic before adding this case.</value>
   </data>
+  <data name="ComplexityHotspotTitle" xml:space="preserve">
+    <value>Complexity rising in a hotspot</value>
+  </data>
+  <data name="ComplexityHotspotMessageFormat" xml:space="preserve">
+    <value>Complexity of '{0}' goes from {1} to {2} in a file changed {3} times recently: this is where debt costs the most. Split the method instead of growing it.</value>
+  </data>
 </root>

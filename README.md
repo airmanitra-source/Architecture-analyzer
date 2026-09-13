@@ -46,6 +46,7 @@ Adding the package drops a default `.editorconfig` at the consumer project root 
 | `ARCH020` | A type must not reuse the name of a type already available from a referenced project | `architecture_analyzer.duplicate_type_name_scope` / `..._exceptions` |
 | `ARCH021` | A prompt that adds production code must add tests too (solution-wide ratio) | `architecture_analyzer.min_test_lines_percent` + shipped MSBuild target |
 | `ARCH022` | **Ratchet** — a method's cyclomatic complexity may never increase | `architecture_analyzer.complexity_ratchet_allowed_increase` + shipped MSBuild target |
+| `ARCH023` | **Ratchet, strict mode** — complexity rising in a churn hotspot (error) | `architecture_analyzer.hotspot_churn_percentile` / `..._churn_window_days` |
 
 ## Configuring the rules
 
@@ -373,6 +374,23 @@ dotnet build -warnaserror:ARCH022
 Complexity is the classic count: 1, plus one per decision point (`if`, loops, `case`, `catch`, `&&`, `||`, `?:`, `??`, switch arms, `when`). `else` adds nothing — it belongs to the `if` already counted.
 
 **Never reported:** a method absent from `HEAD` (it is new, so it degraded nothing), a file that did not change, and anything below the allowed increase. As with the LOC budget, the reference is `HEAD`, so committing moves the ratchet forward.
+
+### ARCH023 — The ratchet goes strict in a hotspot
+
+A file the team keeps touching **and** that keeps growing more complex is where your next incident comes from. ARCH023 is the same regression as ARCH022, reported as an **error** instead of a warning when it happens in such a file.
+
+```ini
+[*.cs]
+# Files above this churn percentile are hotspots. 90 = the top 10% most-touched files.
+architecture_analyzer.hotspot_churn_percentile = 90
+
+# How far back the history is counted.
+architecture_analyzer.churn_window_days = 90
+```
+
+**Churn does not measure anything — it selects.** This is the key design point: churn can only ever grow (every commit increases it), so it could never be ratcheted itself. Instead it is used as a *targeting* mechanism: it decides which files get the strict treatment. The rule therefore reads as *"you may add complexity, except where it is dangerous"* — which is precisely the answer to the objection that complexity is sometimes a legitimate evolution.
+
+The count comes from `git log --no-merges --since=<window> --name-only`, written once per repository into the system temp folder and shared by every project of the solution rather than recomputed for each. A file below the minimum (3 recent changes) is never a hotspot, however small the repository.
 
 ## Full worked example
 

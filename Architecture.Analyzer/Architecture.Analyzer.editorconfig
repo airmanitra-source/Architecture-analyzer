@@ -61,3 +61,9 @@ architecture_analyzer.model_folder_allowed_suffixes = Models/Business=BusinessMo
 # Aucun seuil arbitraire, aucun fichier de baseline : seul ce que le changement
 # courant degrade est signale. Activee par defaut.
 # architecture_analyzer.complexity_ratchet_allowed_increase = 0
+
+# Points chauds — ARCH023 (cliquet en mode strict).
+# Le churn ne mesure rien : il selectionne les fichiers ou le cliquet passe en erreur.
+# Il ne peut que croitre, il ne serait donc pas ratchetable lui-meme.
+# architecture_analyzer.hotspot_churn_percentile = 90
+# architecture_analyzer.churn_window_days = 90

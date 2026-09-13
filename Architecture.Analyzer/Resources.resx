@@ -196,4 +196,10 @@
   <data name="ComplexityRatchetMessageFormat" xml:space="preserve">
     <value>La complexité de '{0}' passe de {1} à {2} : elle ne doit pas se dégrader. Découpe la méthode ou simplifie sa logique avant d'ajouter ce cas.</value>
   </data>
+  <data name="ComplexityHotspotTitle" xml:space="preserve">
+    <value>Complexité en hausse dans un point chaud</value>
+  </data>
+  <data name="ComplexityHotspotMessageFormat" xml:space="preserve">
+    <value>La complexité de '{0}' passe de {1} à {2} dans un fichier modifié {3} fois récemment : c'est là que la dette coûte le plus cher. Découpe la méthode au lieu de l'alourdir.</value>
+  </data>
 </root>

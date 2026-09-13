@@ -17,8 +17,14 @@ public sealed class ComplexityRatchetAnalyzer : DiagnosticAnalyzer
 {
     public const string DiagnosticId = "ARCH022";
 
+    // Same regression, but in a file the team keeps touching. Separate id so both can be tuned
+    // independently, and an error rather than a warning: this is where debt actually costs money.
+    public const string HotspotDiagnosticId = "ARCH023";
+
     private static readonly LocalizableString Title = new LocalizableResourceString(nameof(Resources.ComplexityRatchetTitle), Resources.ResourceManager, typeof(Resources));
     private static readonly LocalizableString MessageFormat = new LocalizableResourceString(nameof(Resources.ComplexityRatchetMessageFormat), Resources.ResourceManager, typeof(Resources));
+    private static readonly LocalizableString HotspotTitle = new LocalizableResourceString(nameof(Resources.ComplexityHotspotTitle), Resources.ResourceManager, typeof(Resources));
+    private static readonly LocalizableString HotspotMessageFormat = new LocalizableResourceString(nameof(Resources.ComplexityHotspotMessageFormat), Resources.ResourceManager, typeof(Resources));
     private const string Category = "Architecture";
 
     private readonly IComplexityRatchetRuleService _ruleService;
@@ -35,7 +41,15 @@ public sealed class ComplexityRatchetAnalyzer : DiagnosticAnalyzer
         DiagnosticSeverity.Warning,
         isEnabledByDefault: true);
 
-    public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics => ImmutableArray.Create(Rule);
+    private static readonly DiagnosticDescriptor HotspotRule = new(
+        HotspotDiagnosticId,
+        HotspotTitle,
+        HotspotMessageFormat,
+        Category,
+        DiagnosticSeverity.Error,
+        isEnabledByDefault: true);
+
+    public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics => ImmutableArray.Create(Rule, HotspotRule);
 
     public ComplexityRatchetAnalyzer()
         : this(new ComplexityRatchetRuleService())
@@ -67,21 +81,46 @@ public sealed class ComplexityRatchetAnalyzer : DiagnosticAnalyzer
             }
 
             var firstTree = startContext.Compilation.SyntaxTrees.FirstOrDefault();
-            var allowedIncrease = firstTree is null
-                ? 0
-                : _ruleService.GetAllowedIncrease(startContext.Options.AnalyzerConfigOptionsProvider.GetOptions(firstTree));
+            var options = firstTree is null ? null : startContext.Options.AnalyzerConfigOptionsProvider.GetOptions(firstTree);
+            var allowedIncrease = options is null ? 0 : _ruleService.GetAllowedIncrease(options);
+
+            // Churn does not gate anything on its own — it only selects which files get the strict
+            // treatment. It can only ever grow, so it could never be ratcheted itself.
+            var churn = _ruleService.BuildChurn(
+                startContext.Options.AdditionalFiles,
+                startContext.Options.AnalyzerConfigOptionsProvider,
+                startContext.CancellationToken);
+            var hotspotThreshold = options is null ? int.MaxValue : _ruleService.GetHotspotThreshold(churn, options);
 
             startContext.RegisterSyntaxNodeAction(
-                nodeContext => AnalyzeMethod(nodeContext, baseline, allowedIncrease),
+                nodeContext => AnalyzeMethod(nodeContext, baseline, allowedIncrease, churn, hotspotThreshold),
                 SyntaxKind.MethodDeclaration);
         });
     }
 
-    private void AnalyzeMethod(SyntaxNodeAnalysisContext context, Dictionary<string, int> baseline, int allowedIncrease)
+    private void AnalyzeMethod(
+        SyntaxNodeAnalysisContext context,
+        Dictionary<string, int> baseline,
+        int allowedIncrease,
+        Dictionary<string, int> churn,
+        int hotspotThreshold)
     {
         var violation = _ruleService.Check((MethodDeclarationSyntax)context.Node, baseline, allowedIncrease);
         if (violation is null)
         {
+            return;
+        }
+
+        var hotspotChurn = _ruleService.GetHotspotChurn(context.Node.SyntaxTree.FilePath, churn, hotspotThreshold);
+        if (hotspotChurn > 0)
+        {
+            context.ReportDiagnostic(Diagnostic.Create(
+                HotspotRule,
+                violation.Location,
+                violation.MethodName,
+                violation.Before,
+                violation.After,
+                hotspotChurn));
             return;
         }
 

@@ -1,5 +1,7 @@
+using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Linq;
 using System.Threading;
 using Architecture.Analyzer.Models;
 using Microsoft.CodeAnalysis;
@@ -17,6 +19,14 @@ internal sealed class ComplexityRatchetRuleService : IComplexityRatchetRuleServi
     // Marks an AdditionalFile as the HEAD version of a source file, produced by the shipped MSBuild
     // target. Its value is the original path, kept for readability of the build log.
     private const string BaselineMetadata = "build_metadata.AdditionalFiles.ArchitectureBaselineFor";
+    private const string ChurnMetadata = "build_metadata.AdditionalFiles.ArchitectureChurnTable";
+    private const string HotspotPercentileOption = AnalyzerConfigPrefix + "hotspot_churn_percentile";
+
+    // Top 10% of the most-touched files.
+    private const int DefaultHotspotPercentile = 90;
+
+    // A file touched once or twice is never a hotspot, however small the repository.
+    private const int MinimumHotspotChurn = 3;
 
     public int GetAllowedIncrease(AnalyzerConfigOptions options)
         => options.TryGetValue(AllowedIncreaseOption, out var value)
@@ -70,6 +80,87 @@ internal sealed class ComplexityRatchetRuleService : IComplexityRatchetRuleServi
         }
 
         return baseline;
+    }
+
+
+    public Dictionary<string, int> BuildChurn(
+        ImmutableArray<AdditionalText> additionalFiles,
+        AnalyzerConfigOptionsProvider optionsProvider,
+        CancellationToken cancellationToken)
+    {
+        var churn = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
+
+        foreach (var file in additionalFiles)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+
+            if (!optionsProvider.GetOptions(file).TryGetValue(ChurnMetadata, out var marker)
+                || !string.Equals(marker, "true", StringComparison.OrdinalIgnoreCase))
+            {
+                continue;
+            }
+
+            var text = file.GetText(cancellationToken);
+            if (text is null)
+            {
+                continue;
+            }
+
+            // One "count|absolute path" per line.
+            foreach (var line in text.Lines)
+            {
+                var raw = line.ToString();
+                var separator = raw.IndexOf('|');
+                if (separator <= 0 || !int.TryParse(raw.Substring(0, separator), out var count))
+                {
+                    continue;
+                }
+
+                churn[raw.Substring(separator + 1)] = count;
+            }
+        }
+
+        return churn;
+    }
+
+    public int GetHotspotThreshold(Dictionary<string, int> churn, AnalyzerConfigOptions options)
+    {
+        if (churn.Count == 0)
+        {
+            return int.MaxValue; // no table, no hotspot.
+        }
+
+        var percentile = DefaultHotspotPercentile;
+        if (options.TryGetValue(HotspotPercentileOption, out var configured)
+            && int.TryParse(configured?.Trim(), out var parsed)
+            && parsed > 0
+            && parsed < 100)
+        {
+            percentile = parsed;
+        }
+
+        var values = churn.Values.OrderBy(value => value).ToList();
+        var index = (int)Math.Ceiling(values.Count * percentile / 100.0) - 1;
+        if (index < 0)
+        {
+            index = 0;
+        }
+        else if (index >= values.Count)
+        {
+            index = values.Count - 1;
+        }
+
+        return Math.Max(values[index], MinimumHotspotChurn);
+    }
+
+    public int GetHotspotChurn(string? filePath, Dictionary<string, int> churn, int threshold)
+    {
+        if (string.IsNullOrEmpty(filePath) || !churn.TryGetValue(filePath!, out var count))
+        {
+            return 0;
+        }
+
+        return count >= threshold ? count : 0;
     }
 
     // Cyclomatic complexity: one, plus one per decision point. 'else' adds nothing — it is part of

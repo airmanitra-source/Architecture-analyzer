@@ -24,4 +24,18 @@ internal interface IComplexityRatchetRuleService
     int ComputeComplexity(MethodDeclarationSyntax method);
 
     ComplexityRatchetViolation? Check(MethodDeclarationSyntax method, Dictionary<string, int> baseline, int allowedIncrease);
+
+    // How many times each file was touched recently, produced by the shipped MSBuild target from
+    // the git history. Empty when the table is absent: hotspot mode then stays off.
+    Dictionary<string, int> BuildChurn(
+        ImmutableArray<AdditionalText> additionalFiles,
+        AnalyzerConfigOptionsProvider optionsProvider,
+        CancellationToken cancellationToken);
+
+    // Churn value above which a file counts as a hotspot, derived from a percentile so it adapts to
+    // the repository instead of relying on an absolute number.
+    int GetHotspotThreshold(Dictionary<string, int> churn, AnalyzerConfigOptions options);
+
+    // The recent change count when the file is a hotspot, 0 otherwise.
+    int GetHotspotChurn(string? filePath, Dictionary<string, int> churn, int threshold);
 }

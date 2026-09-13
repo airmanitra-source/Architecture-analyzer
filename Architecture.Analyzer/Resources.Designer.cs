@@ -467,5 +467,23 @@ namespace Architecture.Analyzer {
                 return ResourceManager.GetString("ComplexityRatchetMessageFormat", resourceCulture);
             }
         }
+
+        /// <summary>
+        ///   Recherche une chaîne localisée semblable à Complexité en hausse dans un point chaud.
+        /// </summary>
+        internal static string ComplexityHotspotTitle {
+            get {
+                return ResourceManager.GetString("ComplexityHotspotTitle", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Recherche une chaîne localisée semblable à La complexité de &apos;{0}&apos; passe de {1} à {2} dans un fichier modifié {3} fois récemment..
+        /// </summary>
+        internal static string ComplexityHotspotMessageFormat {
+            get {
+                return ResourceManager.GetString("ComplexityHotspotMessageFormat", resourceCulture);
+            }
+        }
     }
 }

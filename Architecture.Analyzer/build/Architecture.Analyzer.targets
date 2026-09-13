@@ -14,6 +14,7 @@
     <CompilerVisibleProperty Include="ArchitectureLocAddedProductionLines" />
     <CompilerVisibleProperty Include="ArchitectureLocAddedTestLines" />
     <CompilerVisibleItemMetadata Include="AdditionalFiles" MetadataName="ArchitectureBaselineFor" />
+    <CompilerVisibleItemMetadata Include="AdditionalFiles" MetadataName="ArchitectureChurnTable" />
   </ItemGroup>
 
   <UsingTask
@@ -26,6 +27,7 @@
       <IsDesignTimeBuild ParameterType="System.String" Required="false" />
       <BaselineDirectory ParameterType="System.String" Required="false" />
       <BaselineFiles ParameterType="Microsoft.Build.Framework.ITaskItem[]" Output="true" />
+      <ChurnTable ParameterType="Microsoft.Build.Framework.ITaskItem[]" Output="true" />
       <ProjectAddedLines ParameterType="System.Int32" Output="true" />
       <ProjectBaselineLines ParameterType="System.Int32" Output="true" />
       <SolutionAddedLines ParameterType="System.Int32" Output="true" />
@@ -56,6 +58,9 @@ namespace Architecture.Analyzer.Build
 
         // The HEAD version of every changed file, handed to the analyzer as AdditionalFiles.
         [Output] public ITaskItem[] BaselineFiles { get; set; }
+
+        // How often each file changed recently. One shared table per repository, not per project.
+        [Output] public ITaskItem[] ChurnTable { get; set; }
 
         [Output] public int ProjectAddedLines { get; set; }
         [Output] public int ProjectBaselineLines { get; set; }
@@ -153,6 +158,7 @@ namespace Architecture.Analyzer.Build
                 }
 
                 BaselineFiles = WriteHeadBaseline();
+                ChurnTable = WriteChurnTable();
 
                 LogBudgetGauge();
                 return true;
@@ -164,6 +170,76 @@ namespace Architecture.Analyzer.Build
                 return true;
             }
         }
+
+        private const int DefaultChurnWindowDays = 90;
+        private const int ChurnCacheMinutes = 10;
+
+        // Counts how many commits touched each file over a recent window. Churn is never compared to
+        // a previous value — it only ranks files — so it is written once per repository and shared
+        // by every project of the solution rather than recomputed for each.
+        private ITaskItem[] WriteChurnTable()
+        {
+            var empty = new ITaskItem[0];
+
+            var windowDays = ReadIntOption("architecture_analyzer.churn_window_days");
+            if (windowDays <= 0)
+            {
+                windowDays = DefaultChurnWindowDays;
+            }
+
+            var cachePath = ChurnCachePath(windowDays);
+            if (!IsFresh(cachePath))
+            {
+                var history = RunGit("log --no-merges --since=" + windowDays.ToString() + ".days --format=format: --name-only -- *.cs");
+                if (history == null)
+                {
+                    return empty;
+                }
+
+                var counts = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
+                foreach (var relative in SplitLines(history))
+                {
+                    var full = ToFullPath(_repoRoot, relative);
+                    int seen;
+                    counts.TryGetValue(full, out seen);
+                    counts[full] = seen + 1;
+                }
+
+                var lines = new List<string>();
+                foreach (var pair in counts)
+                {
+                    // "count|absolute path" — '|' cannot appear in a Windows path, so no escaping.
+                    lines.Add(pair.Value.ToString() + "|" + pair.Key);
+                }
+
+                Directory.CreateDirectory(Path.GetDirectoryName(cachePath));
+                File.WriteAllLines(cachePath, lines);
+            }
+
+            var item = new TaskItem(cachePath);
+            item.SetMetadata("ArchitectureChurnTable", "true");
+            return new ITaskItem[] { item };
+        }
+
+        private string ChurnCachePath(int windowDays)
+        {
+            // Stable hash of the repository root: string.GetHashCode is not stable across processes.
+            var hash = 17;
+            foreach (var character in _repoRoot)
+            {
+                unchecked
+                {
+                    hash = (hash * 31) + character;
+                }
+            }
+
+            var name = "churn-" + (hash & 0x7fffffff).ToString() + "-" + windowDays.ToString() + ".txt";
+            return Path.Combine(Path.GetTempPath(), "architecture-analyzer", name);
+        }
+
+        private static bool IsFresh(string path)
+            => File.Exists(path)
+               && (DateTime.UtcNow - File.GetLastWriteTimeUtc(path)).TotalMinutes < ChurnCacheMinutes;
 
         private const int MaxBaselineFiles = 200;
         private const char Quote = '"';
@@ -598,11 +674,13 @@ namespace Architecture.Analyzer.Build
       <Output TaskParameter="AddedProductionLines" PropertyName="ArchitectureLocAddedProductionLines" />
       <Output TaskParameter="AddedTestLines" PropertyName="ArchitectureLocAddedTestLines" />
       <Output TaskParameter="BaselineFiles" ItemName="_ArchitectureComplexityBaseline" />
+      <Output TaskParameter="ChurnTable" ItemName="_ArchitectureChurnTable" />
     </ComputeLocBudget>
 
     <!-- Custom metadata carries over, so the analyzer can tell these apart from other AdditionalFiles. -->
     <ItemGroup>
       <AdditionalFiles Include="@(_ArchitectureComplexityBaseline)" />
+      <AdditionalFiles Include="@(_ArchitectureChurnTable)" />
     </ItemGroup>
   </Target>
 

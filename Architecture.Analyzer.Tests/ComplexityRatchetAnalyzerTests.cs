@@ -11,6 +11,7 @@ public sealed class ComplexityRatchetAnalyzerTests
 {
     private const string BaselineMetadata = "build_metadata.AdditionalFiles.ArchitectureBaselineFor";
     private const string AllowedIncrease = "architecture_analyzer.complexity_ratchet_allowed_increase";
+    private const string ChurnMetadata = "build_metadata.AdditionalFiles.ArchitectureChurnTable";
 
     // Complexity 1: a single return, no decision point.
     private const string Simple = @"
@@ -146,19 +147,58 @@ public class C
         Assert.Equal(DiagnosticSeverity.Warning, diagnostic.Severity);
     }
 
+    // --- Hotspot mode: churn selects which files get the strict treatment ---
+
+    [Fact]
+    public async Task ReportsTheHotspotRuleWhenTheFileIsChurned()
+    {
+        var churn = new Dictionary<string, int> { ["C.cs"] = 12 };
+        var diagnostics = await AnalyzeAsync(Complicated, Simple, null, true, churn);
+
+        Assert.Single(diagnostics, d => d.Id == ComplexityRatchetAnalyzer.HotspotDiagnosticId);
+        Assert.DoesNotContain(diagnostics, d => d.Id == ComplexityRatchetAnalyzer.DiagnosticId);
+    }
+
+    [Fact]
+    public async Task TheHotspotRuleIsAnError()
+    {
+        // The plain ratchet is a warning; in a file the team keeps touching it becomes an error.
+        var churn = new Dictionary<string, int> { ["C.cs"] = 12 };
+        var diagnostics = await AnalyzeAsync(Complicated, Simple, null, true, churn);
+
+        var diagnostic = Assert.Single(diagnostics, d => d.Id == ComplexityRatchetAnalyzer.HotspotDiagnosticId);
+        Assert.Equal(DiagnosticSeverity.Error, diagnostic.Severity);
+    }
+
+    [Fact]
+    public async Task FallsBackToThePlainRatchetWhenTheFileIsRarelyTouched()
+    {
+        // Below the minimum churn: a file changed once is never a hotspot.
+        var churn = new Dictionary<string, int> { ["C.cs"] = 1 };
+        var diagnostics = await AnalyzeAsync(Complicated, Simple, null, true, churn);
+
+        Assert.Single(diagnostics, d => d.Id == ComplexityRatchetAnalyzer.DiagnosticId);
+        Assert.DoesNotContain(diagnostics, d => d.Id == ComplexityRatchetAnalyzer.HotspotDiagnosticId);
+    }
+
+    [Fact]
+    public async Task FallsBackToThePlainRatchetWithoutAChurnTable()
+        => Assert.Equal(1, await CountAsync(current: Complicated, head: Simple));
+
     private static async Task<int> CountAsync(
         string current,
         string? head,
         Dictionary<string, string>? config = null,
         bool markAsBaseline = true)
-        => (await AnalyzeAsync(current, head, config, markAsBaseline))
+        => (await AnalyzeAsync(current, head, config, markAsBaseline, null))
             .Count(d => d.Id == ComplexityRatchetAnalyzer.DiagnosticId);
 
     private static async Task<List<Diagnostic>> AnalyzeAsync(
         string current,
         string? head,
         Dictionary<string, string>? config,
-        bool markAsBaseline)
+        bool markAsBaseline,
+        Dictionary<string, int>? churn = null)
     {
         using var workspace = new AdhocWorkspace();
         var projectId = ProjectId.CreateNewId();
@@ -172,13 +212,30 @@ public class C
         workspace.TryApplyChanges(solution);
         var compilation = await workspace.CurrentSolution.GetProject(projectId)!.GetCompilationAsync();
 
-        var additional = head is null
-            ? ImmutableArray<AdditionalText>.Empty
-            : ImmutableArray.Create<AdditionalText>(new InMemoryText("head/C.cs", head));
+        var files = new List<AdditionalText>();
+        if (head is not null)
+        {
+            var baseline = new InMemoryText("head/C.cs", head);
+            if (markAsBaseline)
+            {
+                baseline.Metadata[BaselineMetadata] = "C.cs";
+            }
+
+            files.Add(baseline);
+        }
+
+        if (churn is not null)
+        {
+            var table = new InMemoryText(
+                "churn.txt",
+                string.Join(Environment.NewLine, churn.Select(pair => pair.Value + "|" + pair.Key)));
+            table.Metadata[ChurnMetadata] = "true";
+            files.Add(table);
+        }
 
         var options = new AnalyzerOptions(
-            additional,
-            new ConfigProvider(config ?? new Dictionary<string, string>(), markAsBaseline));
+            files.ToImmutableArray(),
+            new ConfigProvider(config ?? new Dictionary<string, string>()));
 
         var diagnostics = await compilation!
             .WithAnalyzers(
@@ -191,12 +248,14 @@ public class C
 
     private sealed class InMemoryText(string path, string text) : AdditionalText
     {
+        public Dictionary<string, string> Metadata { get; } = new();
+
         public override string Path => path;
 
         public override SourceText GetText(CancellationToken cancellationToken = default) => SourceText.From(text);
     }
 
-    private sealed class ConfigProvider(IReadOnlyDictionary<string, string> values, bool markAsBaseline) : AnalyzerConfigOptionsProvider
+    private sealed class ConfigProvider(IReadOnlyDictionary<string, string> values) : AnalyzerConfigOptionsProvider
     {
         public override AnalyzerConfigOptions GlobalOptions => new Options(values);
 
@@ -204,13 +263,16 @@ public class C
 
         public override AnalyzerConfigOptions GetOptions(AdditionalText textFile)
         {
-            var metadata = new Dictionary<string, string>(values);
-            if (markAsBaseline)
+            var merged = new Dictionary<string, string>(values);
+            if (textFile is InMemoryText inMemory)
             {
-                metadata[BaselineMetadata] = "C.cs";
+                foreach (var entry in inMemory.Metadata)
+                {
+                    merged[entry.Key] = entry.Value;
+                }
             }
 
-            return new Options(metadata);
+            return new Options(merged);
         }
     }
 
