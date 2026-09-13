@@ -41,7 +41,7 @@ Adding the package drops a default `.editorconfig` at the consumer project root 
 
 ### Overriding severity (works for every rule)
 
-Every diagnostic is emitted as an error by default. Downgrade or silence one from any `.editorconfig`:
+Every diagnostic is emitted as an error by default, except `ARCH022` which is a **warning** (a complexity increase is sometimes legitimate — see its section). Downgrade or silence one from any `.editorconfig`:
 
 ```ini
 [*.cs]
@@ -350,6 +350,12 @@ Unlike a ceiling ("no method above 20"), a ratchet needs no arbitrary threshold 
 [*.cs]
 # How much a method may grow before it is reported. 0 (the default) is a strict ratchet.
 architecture_analyzer.complexity_ratchet_allowed_increase = 0
+```
+
+**Why a warning and not an error.** Unlike a duplicate or a name collision, a complexity increase is sometimes the legitimate evolution of the software: a new business case, a new failure mode to handle. Blocking the build would push people to split methods artificially just to satisfy the tool — producing worse code than the one it prevents. Because the ratchet has no backlog, the warning stays rare and therefore visible. Escalate it where you want it to block, typically in CI only:
+
+```bash
+dotnet build -warnaserror:ARCH022
 ```
 
 **How the comparison works.** The shipped MSBuild target extracts the `HEAD` version of every changed `.cs` file (`git show HEAD:<file>`) into `obj/`, and hands them to the analyzer as `AdditionalFiles`. The analyzer parses both versions and compares them method by method. Methods are matched on *type + name + parameter count*, never on line numbers, so moving a method inside its file does not lose its history.

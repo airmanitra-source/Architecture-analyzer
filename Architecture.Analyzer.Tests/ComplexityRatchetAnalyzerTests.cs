@@ -134,6 +134,18 @@ public class C
         Assert.Contains("3", message);   // after
     }
 
+    [Fact]
+    public async Task IsReportedAsAWarningNotAnError()
+    {
+        // Deliberate: a complexity increase is sometimes the legitimate evolution of the software,
+        // and blocking it would push people to split methods artificially. Changing this should be
+        // a conscious decision, so the test pins it.
+        var diagnostics = await AnalyzeAsync(Complicated, Simple, null, true);
+        var diagnostic = Assert.Single(diagnostics, d => d.Id == ComplexityRatchetAnalyzer.DiagnosticId);
+
+        Assert.Equal(DiagnosticSeverity.Warning, diagnostic.Severity);
+    }
+
     private static async Task<int> CountAsync(
         string current,
         string? head,

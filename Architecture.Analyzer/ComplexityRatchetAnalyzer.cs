@@ -28,7 +28,11 @@ public sealed class ComplexityRatchetAnalyzer : DiagnosticAnalyzer
         Title,
         MessageFormat,
         Category,
-        DiagnosticSeverity.Error,
+        // A warning, not an error: unlike a duplicate or a name collision, a complexity increase is
+        // sometimes the legitimate evolution of the software. Blocking it would push people to split
+        // methods artificially just to satisfy the tool — worse code than the one being prevented.
+        // The ratchet has no backlog, so a warning stays rare and therefore visible.
+        DiagnosticSeverity.Warning,
         isEnabledByDefault: true);
 
     public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics => ImmutableArray.Create(Rule);
