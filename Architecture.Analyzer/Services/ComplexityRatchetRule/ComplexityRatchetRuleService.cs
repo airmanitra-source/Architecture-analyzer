@@ -8,6 +8,7 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Diagnostics;
+using Microsoft.CodeAnalysis.Text;
 
 namespace Architecture.Analyzer.Services.ComplexityRatchetRule;
 
@@ -36,12 +37,12 @@ internal sealed class ComplexityRatchetRuleService : IComplexityRatchetRuleServi
             ? parsed
             : 0;
 
-    public Dictionary<string, int> BuildBaseline(
+    public Dictionary<(string Type, string Method, int Arity), int> BuildBaseline(
         ImmutableArray<AdditionalText> additionalFiles,
         AnalyzerConfigOptionsProvider optionsProvider,
         CancellationToken cancellationToken)
     {
-        var baseline = new Dictionary<string, int>(System.StringComparer.Ordinal);
+        var baseline = new Dictionary<(string Type, string Method, int Arity), int>();
 
         foreach (var file in additionalFiles)
         {
@@ -106,17 +107,26 @@ internal sealed class ComplexityRatchetRuleService : IComplexityRatchetRuleServi
                 continue;
             }
 
-            // One "count|absolute path" per line.
+            // One "count|absolute path" per line, scanned in place: the path is the only string that
+            // has to exist, because it is the dictionary key.
             foreach (var line in text.Lines)
             {
-                var raw = line.ToString();
-                var separator = raw.IndexOf('|');
-                if (separator <= 0 || !int.TryParse(raw.Substring(0, separator), out var count))
+                var separator = -1;
+                for (var position = line.Start; position < line.End; position++)
+                {
+                    if (text[position] == '|')
+                    {
+                        separator = position;
+                        break;
+                    }
+                }
+
+                if (separator <= line.Start || !TryParseInt(text, line.Start, separator, out var count))
                 {
                     continue;
                 }
 
-                churn[raw.Substring(separator + 1)] = count;
+                churn[text.ToString(TextSpan.FromBounds(separator + 1, line.End))] = count;
             }
         }
 
@@ -207,7 +217,10 @@ internal sealed class ComplexityRatchetRuleService : IComplexityRatchetRuleServi
         return complexity;
     }
 
-    public ComplexityRatchetViolation? Check(MethodDeclarationSyntax method, Dictionary<string, int> baseline, int allowedIncrease)
+    public ComplexityRatchetViolation? Check(
+        MethodDeclarationSyntax method,
+        Dictionary<(string Type, string Method, int Arity), int> baseline,
+        int allowedIncrease)
     {
         // A method absent from the baseline is new: there is nothing it could have degraded.
         if (!baseline.TryGetValue(BuildKey(method), out var before))
@@ -229,9 +242,36 @@ internal sealed class ComplexityRatchetRuleService : IComplexityRatchetRuleServi
     }
 
     // Type + method + parameter count: stable when the method moves inside the file, which happens
-    // constantly, unlike a line number.
-    private static string BuildKey(MethodDeclarationSyntax method)
-        => BuildDisplayName(method) + "#" + method.ParameterList.Parameters.Count.ToString();
+    // constantly, unlike a line number. A tuple of strings that already exist rather than a
+    // concatenation: this key is built for every method on every analysis pass.
+    private static (string Type, string Method, int Arity) BuildKey(MethodDeclarationSyntax method)
+        => (method.Parent is TypeDeclarationSyntax type ? type.Identifier.ValueText : string.Empty,
+            method.Identifier.ValueText,
+            method.ParameterList.Parameters.Count);
+
+    // netstandard2.0 has no span-based int.TryParse; this reads the digits in place instead of
+    // cutting a substring out of every line.
+    private static bool TryParseInt(SourceText text, int start, int end, out int value)
+    {
+        value = 0;
+        if (start >= end)
+        {
+            return false;
+        }
+
+        for (var position = start; position < end; position++)
+        {
+            var digit = text[position] - '0';
+            if (digit < 0 || digit > 9)
+            {
+                return false;
+            }
+
+            value = (value * 10) + digit;
+        }
+
+        return true;
+    }
 
     private static string BuildDisplayName(MethodDeclarationSyntax method)
     {

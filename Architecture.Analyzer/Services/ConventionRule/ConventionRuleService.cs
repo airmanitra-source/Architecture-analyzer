@@ -157,10 +157,10 @@ internal sealed class ConventionRuleService : IConventionRuleService
         {
             [FolderTrait] = Path.GetDirectoryName(filePath) ?? string.Empty,
             [NamespaceTrait] = type.ContainingNamespace?.IsGlobalNamespace == false ? type.ContainingNamespace.Name : string.Empty,
-            [KindTrait] = type.IsRecord ? "record" : type.TypeKind.ToString().ToLowerInvariant(),
+            [KindTrait] = KindName(type),
             [SealedTrait] = type.IsSealed && !type.IsStatic ? "true" : "false",
             [StaticTrait] = type.IsStatic ? "true" : "false",
-            [AccessibilityTrait] = type.DeclaredAccessibility.ToString().ToLowerInvariant(),
+            [AccessibilityTrait] = AccessibilityName(type.DeclaredAccessibility),
             [BaseTrait] = type.BaseType is null || type.BaseType.SpecialType == SpecialType.System_Object
                 ? string.Empty
                 : type.BaseType.Name,
@@ -275,6 +275,40 @@ internal sealed class ConventionRuleService : IConventionRuleService
         }
 
         return violations;
+    }
+
+    // Constants rather than Enum.ToString().ToLowerInvariant(): that pair allocates twice per type,
+    // for every type of every compilation.
+    private static string KindName(INamedTypeSymbol type)
+    {
+        if (type.IsRecord)
+        {
+            return "record";
+        }
+
+        switch (type.TypeKind)
+        {
+            case TypeKind.Class: return "class";
+            case TypeKind.Struct: return "struct";
+            case TypeKind.Interface: return "interface";
+            case TypeKind.Enum: return "enum";
+            case TypeKind.Delegate: return "delegate";
+            default: return "other";
+        }
+    }
+
+    private static string AccessibilityName(Accessibility accessibility)
+    {
+        switch (accessibility)
+        {
+            case Accessibility.Public: return "public";
+            case Accessibility.Internal: return "internal";
+            case Accessibility.Private: return "private";
+            case Accessibility.Protected: return "protected";
+            case Accessibility.ProtectedOrInternal: return "protected internal";
+            case Accessibility.ProtectedAndInternal: return "private protected";
+            default: return "other";
+        }
     }
 
     // "CustomerBusinessModel" -> ["BusinessModel", "Model"]: the last two words, then the last one.

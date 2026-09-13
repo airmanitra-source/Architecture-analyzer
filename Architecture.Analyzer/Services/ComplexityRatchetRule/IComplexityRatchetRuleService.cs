@@ -16,14 +16,17 @@ internal interface IComplexityRatchetRuleService
 
     // Complexity of every method as it stands at HEAD, keyed by type + method + parameter count so
     // the comparison survives the method moving inside its file.
-    Dictionary<string, int> BuildBaseline(
+    Dictionary<(string Type, string Method, int Arity), int> BuildBaseline(
         ImmutableArray<AdditionalText> additionalFiles,
         AnalyzerConfigOptionsProvider optionsProvider,
         CancellationToken cancellationToken);
 
     int ComputeComplexity(MethodDeclarationSyntax method);
 
-    ComplexityRatchetViolation? Check(MethodDeclarationSyntax method, Dictionary<string, int> baseline, int allowedIncrease);
+    ComplexityRatchetViolation? Check(
+        MethodDeclarationSyntax method,
+        Dictionary<(string Type, string Method, int Arity), int> baseline,
+        int allowedIncrease);
 
     // How many times each file was touched recently, produced by the shipped MSBuild target from
     // the git history. Empty when the table is absent: hotspot mode then stays off.

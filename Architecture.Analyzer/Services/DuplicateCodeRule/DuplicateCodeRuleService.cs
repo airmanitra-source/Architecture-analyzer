@@ -44,40 +44,52 @@ internal sealed class DuplicateCodeRuleService : IDuplicateCodeRuleService
             return null; // abstract, partial or interface declaration: nothing to compare.
         }
 
-        var kinds = new List<int>();
+        // First pass only counts. Most methods are short accessors under the threshold, and they
+        // must not pay for a dictionary they will never use.
+        var tokenCount = 0;
         foreach (var token in body.DescendantTokens())
         {
-            // Only the KIND of each token is kept, never its text: two different identifiers are
-            // both an identifier, 1 and 42 are both a numeric literal. Renaming changes nothing.
-            kinds.Add(token.RawKind);
+            tokenCount++;
         }
 
-        if (kinds.Count < minTokens)
+        if (tokenCount < minTokens)
         {
             return null;
         }
 
+        // Second pass. Only the KIND of each token is kept, never its text: two different
+        // identifiers are both an identifier, 1 and 42 are both a numeric literal, so renaming
+        // changes nothing. The kinds are never stored — a ring of the last ShingleSize values is
+        // all the window hash needs, instead of one list entry per token of every method.
         var hash = 17;
-        foreach (var kind in kinds)
+        var window = new int[ShingleSize];
+        var seen = 0;
+        var shingles = new Dictionary<int, int>();
+        var shingleCount = 0;
+
+        foreach (var token in body.DescendantTokens())
         {
+            var kind = token.RawKind;
             unchecked
             {
                 hash = (hash * 31) + kind;
             }
-        }
 
-        // Windows of consecutive kinds ("shingles"): order-sensitive, unlike counting tokens one by
-        // one, so a body with the same tokens in another order is not mistaken for a copy.
-        var shingles = new Dictionary<int, int>();
-        var shingleCount = 0;
-        for (var start = 0; start + ShingleSize <= kinds.Count; start++)
-        {
+            window[seen % ShingleSize] = kind;
+            seen++;
+            if (seen < ShingleSize)
+            {
+                continue;
+            }
+
+            // Windows of consecutive kinds ("shingles"): order-sensitive, unlike counting tokens
+            // one by one, so a body with the same tokens in another order is not mistaken for a copy.
             var windowHash = 17;
             for (var offset = 0; offset < ShingleSize; offset++)
             {
                 unchecked
                 {
-                    windowHash = (windowHash * 31) + kinds[start + offset];
+                    windowHash = (windowHash * 31) + window[(seen - ShingleSize + offset) % ShingleSize];
                 }
             }
 
@@ -89,7 +101,7 @@ internal sealed class DuplicateCodeRuleService : IDuplicateCodeRuleService
         return new MethodFingerprint(
             BuildDisplayName(method),
             hash,
-            kinds.Count,
+            tokenCount,
             shingles,
             shingleCount,
             method.Identifier.GetLocation(),

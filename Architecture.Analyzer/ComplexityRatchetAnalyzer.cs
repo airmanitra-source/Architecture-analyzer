@@ -100,7 +100,7 @@ public sealed class ComplexityRatchetAnalyzer : DiagnosticAnalyzer
 
     private void AnalyzeMethod(
         SyntaxNodeAnalysisContext context,
-        Dictionary<string, int> baseline,
+        Dictionary<(string Type, string Method, int Arity), int> baseline,
         int allowedIncrease,
         Dictionary<string, int> churn,
         int hotspotThreshold)

@@ -149,14 +149,28 @@ internal sealed class LocBudgetRuleService : ILocBudgetRuleService
         var count = 0;
         for (var index = clampedStart; index <= clampedEnd; index++)
         {
-            var line = text.Lines[index];
-            if (!string.IsNullOrWhiteSpace(text.ToString(line.Span)))
+            if (!IsBlank(text, text.Lines[index].Span))
             {
                 count++;
             }
         }
 
         return count;
+    }
+
+    // Reads the characters in place. Materializing each line as a string only to test it for
+    // whitespace would allocate once per line of every class and method the analyzer visits.
+    private static bool IsBlank(SourceText text, TextSpan span)
+    {
+        for (var position = span.Start; position < span.End; position++)
+        {
+            if (!char.IsWhiteSpace(text[position]))
+            {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     private static int CalculateBudget(int baselineLoc, int percent)
