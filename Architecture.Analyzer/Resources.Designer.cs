@@ -431,5 +431,23 @@ namespace Architecture.Analyzer {
                 return ResourceManager.GetString("TestRatioMessageFormat", resourceCulture);
             }
         }
+
+        /// <summary>
+        ///   Recherche une chaîne localisée semblable à Ce nom de type existe déjà dans un projet référencé.
+        /// </summary>
+        internal static string DuplicateTypeNameTitle {
+            get {
+                return ResourceManager.GetString("DuplicateTypeNameTitle", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Recherche une chaîne localisée semblable à Le type &apos;{0}&apos; existe déjà dans &apos;{1}&apos;, que ce projet référence : utilise celui-là au lieu d&apos;en redéclarer un..
+        /// </summary>
+        internal static string DuplicateTypeNameMessageFormat {
+            get {
+                return ResourceManager.GetString("DuplicateTypeNameMessageFormat", resourceCulture);
+            }
+        }
     }
 }

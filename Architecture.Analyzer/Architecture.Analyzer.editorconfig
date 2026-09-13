@@ -49,3 +49,9 @@ architecture_analyzer.model_folder_allowed_suffixes = Models/Business=BusinessMo
 # architecture_analyzer.min_test_lines_percent = 20
 # architecture_analyzer.test_ratio_min_added_lines = 50
 # architecture_analyzer.test_file_patterns = /tests/;.tests/;tests.cs;test.cs;spec.cs
+
+# Nom de type deja pris par un projet reference — ARCH020.
+# Portee par defaut : le premier segment du nom de l'assembly compile
+# (CyberPointNet.Portal ne se compare qu'aux CyberPointNet.*), jamais au framework.
+# architecture_analyzer.duplicate_type_name_scope = CyberPointNet
+# architecture_analyzer.duplicate_type_name_exceptions = Program;Startup

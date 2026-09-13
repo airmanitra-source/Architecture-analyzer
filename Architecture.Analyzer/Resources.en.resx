@@ -184,4 +184,10 @@
   <data name="TestRatioMessageFormat" xml:space="preserve">
     <value>This prompt adds {0} production line(s) for only {1} test line(s) (ratio {2}%, minimum {3}%): add tests before going further.</value>
   </data>
+  <data name="DuplicateTypeNameTitle" xml:space="preserve">
+    <value>This type name already exists in a referenced project</value>
+  </data>
+  <data name="DuplicateTypeNameMessageFormat" xml:space="preserve">
+    <value>Type '{0}' already exists in '{1}', which this project references: use that one instead of redeclaring it.</value>
+  </data>
 </root>

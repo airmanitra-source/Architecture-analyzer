@@ -33,6 +33,7 @@ Adding the package drops a default `.editorconfig` at the consumer project root 
 | `ARCH017` | Forbids `+` / `+=` string concatenation — use a `StringBuilder` | (no configuration) |
 | `ARCH018` | Forbids string interpolation (`$"..."`) — use a `StringBuilder` | (no configuration) |
 | `ARCH019` | Detects a method whose body duplicates another one (copy/paste, renamed) | `architecture_analyzer.duplicate_code_similarity_percent` / `..._min_tokens` |
+| `ARCH020` | A type must not reuse the name of a type already available from a referenced project | `architecture_analyzer.duplicate_type_name_scope` / `..._exceptions` |
 | `ARCH021` | A prompt that adds production code must add tests too (solution-wide ratio) | `architecture_analyzer.min_test_lines_percent` + shipped MSBuild target |
 
 ## Configuring the rules
@@ -317,6 +318,26 @@ architecture_analyzer.test_file_patterns = /tests/;.tests/;tests.cs;test.cs;spec
 A prompt adding 200 production lines and 10 test lines reports: *"adds 200 production line(s) for only 10 test line(s) (ratio 5%, minimum 20%): add tests before going further."*
 
 Never reported: a prompt that adds no production line (touching only tests), and any change below `test_ratio_min_added_lines`. Like ARCH008/ARCH009 the counter resets at each commit, so the budget is per increment. The per-build gauge prints the current ratio even when it passes, so the pressure is visible before the wall.
+
+### ARCH020 — A type name already taken by a referenced project
+
+**Do not declare a type whose name already exists in something you reference.** If you could already see that type and you write another one with the same name, you copied it instead of using it.
+
+```ini
+[*.cs]
+# Which assemblies count as "ours". Defaults to the first segment of the compiled assembly name,
+# so CyberPointNet.Portal compares itself only against CyberPointNet.* — never against the BCL.
+architecture_analyzer.duplicate_type_name_scope = CyberPointNet
+
+# Names allowed to repeat.
+architecture_analyzer.duplicate_type_name_exceptions = Program;Startup
+```
+
+**Why it complements ARCH019.** ARCH019 compares method *bodies*, so it loses sight of a copy as soon as the two drift apart — precisely when the problem gets worse (several behaviours under one name). ARCH020 compares the *name*, which does not drift. It is the net that catches ageing duplication.
+
+**It filters itself.** Two independent applications that do not reference each other cannot see each other's types, so a `Portal.AccountController` and an `SSO.AccountController` are never reported — that is normal MVC convention. Only "I had access to the original and redeclared it anyway" surfaces.
+
+**Never reported:** nested types (their name is already qualified by the enclosing type), `internal` types of referenced assemblies (they could not have been reused), a different generic arity (`Wrapper<T>` vs `Wrapper`), and anything listed in the exceptions. Namespaces are deliberately ignored: the colliding *name* is the signal.
 
 ## Full worked example
 
