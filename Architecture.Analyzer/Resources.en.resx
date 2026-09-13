@@ -190,4 +190,10 @@
   <data name="DuplicateTypeNameMessageFormat" xml:space="preserve">
     <value>Type '{0}' already exists in '{1}', which this project references: use that one instead of redeclaring it.</value>
   </data>
+  <data name="ComplexityRatchetTitle" xml:space="preserve">
+    <value>This method is getting more complex</value>
+  </data>
+  <data name="ComplexityRatchetMessageFormat" xml:space="preserve">
+    <value>Complexity of '{0}' goes from {1} to {2}: it must not degrade. Split the method or simplify its logic before adding this case.</value>
+  </data>
 </root>

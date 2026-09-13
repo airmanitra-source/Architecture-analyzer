@@ -449,5 +449,23 @@ namespace Architecture.Analyzer {
                 return ResourceManager.GetString("DuplicateTypeNameMessageFormat", resourceCulture);
             }
         }
+
+        /// <summary>
+        ///   Recherche une chaîne localisée semblable à La complexité de cette méthode se dégrade.
+        /// </summary>
+        internal static string ComplexityRatchetTitle {
+            get {
+                return ResourceManager.GetString("ComplexityRatchetTitle", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Recherche une chaîne localisée semblable à La complexité de &apos;{0}&apos; passe de {1} à {2} : elle ne doit pas se dégrader. Découpe la méthode ou simplifie sa logique avant d&apos;ajouter ce cas..
+        /// </summary>
+        internal static string ComplexityRatchetMessageFormat {
+            get {
+                return ResourceManager.GetString("ComplexityRatchetMessageFormat", resourceCulture);
+            }
+        }
     }
 }

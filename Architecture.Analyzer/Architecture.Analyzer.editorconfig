@@ -55,3 +55,9 @@ architecture_analyzer.model_folder_allowed_suffixes = Models/Business=BusinessMo
 # (CyberPointNet.Portal ne se compare qu'aux CyberPointNet.*), jamais au framework.
 # architecture_analyzer.duplicate_type_name_scope = CyberPointNet
 # architecture_analyzer.duplicate_type_name_exceptions = Program;Startup
+
+# Cliquet de complexite cyclomatique — ARCH022.
+# La complexite d'une methode peut rester egale ou baisser, jamais augmenter.
+# Aucun seuil arbitraire, aucun fichier de baseline : seul ce que le changement
+# courant degrade est signale. Activee par defaut.
+# architecture_analyzer.complexity_ratchet_allowed_increase = 0

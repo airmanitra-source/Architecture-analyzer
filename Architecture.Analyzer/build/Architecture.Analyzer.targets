@@ -13,6 +13,7 @@
     <CompilerVisibleProperty Include="ArchitectureLocSolutionBaselineLines" />
     <CompilerVisibleProperty Include="ArchitectureLocAddedProductionLines" />
     <CompilerVisibleProperty Include="ArchitectureLocAddedTestLines" />
+    <CompilerVisibleItemMetadata Include="AdditionalFiles" MetadataName="ArchitectureBaselineFor" />
   </ItemGroup>
 
   <UsingTask
@@ -23,6 +24,8 @@
       <WorkingDirectory ParameterType="System.String" Required="true" />
       <ProjectFiles ParameterType="System.String" Required="false" />
       <IsDesignTimeBuild ParameterType="System.String" Required="false" />
+      <BaselineDirectory ParameterType="System.String" Required="false" />
+      <BaselineFiles ParameterType="Microsoft.Build.Framework.ITaskItem[]" Output="true" />
       <ProjectAddedLines ParameterType="System.Int32" Output="true" />
       <ProjectBaselineLines ParameterType="System.Int32" Output="true" />
       <SolutionAddedLines ParameterType="System.Int32" Output="true" />
@@ -47,6 +50,12 @@ namespace Architecture.Analyzer.Build
         public string WorkingDirectory { get; set; }
         public string ProjectFiles { get; set; }
         public string IsDesignTimeBuild { get; set; }
+
+        // Where the HEAD copies are written (inside obj/, never in the repository).
+        public string BaselineDirectory { get; set; }
+
+        // The HEAD version of every changed file, handed to the analyzer as AdditionalFiles.
+        [Output] public ITaskItem[] BaselineFiles { get; set; }
 
         [Output] public int ProjectAddedLines { get; set; }
         [Output] public int ProjectBaselineLines { get; set; }
@@ -143,6 +152,8 @@ namespace Architecture.Analyzer.Build
                     }
                 }
 
+                BaselineFiles = WriteHeadBaseline();
+
                 LogBudgetGauge();
                 return true;
             }
@@ -152,6 +163,53 @@ namespace Architecture.Analyzer.Build
                 Log.LogMessage(MessageImportance.Low, "Architecture.Analyzer LOC budget computation skipped: " + exception.Message);
                 return true;
             }
+        }
+
+        private const int MaxBaselineFiles = 200;
+        private const char Quote = '"';
+
+        // Writes the HEAD content of each changed .cs file so the analyzer can measure what this
+        // change made worse. Files added by this change have no HEAD version and are skipped.
+        private ITaskItem[] WriteHeadBaseline()
+        {
+            var items = new List<ITaskItem>();
+            if (string.IsNullOrEmpty(BaselineDirectory))
+            {
+                return items.ToArray();
+            }
+
+            var changed = RunGit("diff --name-only HEAD -- *.cs");
+            if (changed == null)
+            {
+                return items.ToArray();
+            }
+
+            Directory.CreateDirectory(BaselineDirectory);
+
+            foreach (var relative in SplitLines(changed))
+            {
+                if (items.Count >= MaxBaselineFiles)
+                {
+                    break;
+                }
+
+                var content = RunGit("show HEAD:" + Quote + relative + Quote);
+                if (content == null)
+                {
+                    continue;
+                }
+
+                // Path.DirectorySeparatorChar rather than a literal separator: no escaping to get wrong.
+                var flattened = relative.Replace('/', '_').Replace(Path.DirectorySeparatorChar, '_');
+                var target = Path.Combine(BaselineDirectory, flattened);
+                File.WriteAllText(target, content);
+
+                var item = new TaskItem(target);
+                item.SetMetadata("ArchitectureBaselineFor", relative);
+                items.Add(item);
+            }
+
+            return items.ToArray();
         }
 
         private static string ToFullPath(string root, string relative)
@@ -531,14 +589,21 @@ namespace Architecture.Analyzer.Build
     <ComputeLocBudget
       WorkingDirectory="$(MSBuildProjectDirectory)"
       ProjectFiles="@(Compile->'%(FullPath)')"
-      IsDesignTimeBuild="$(DesignTimeBuild)">
+      IsDesignTimeBuild="$(DesignTimeBuild)"
+      BaselineDirectory="$(MSBuildProjectDirectory)\$(IntermediateOutputPath)architecture-baseline">
       <Output TaskParameter="ProjectAddedLines" PropertyName="ArchitectureLocProjectAddedLines" />
       <Output TaskParameter="ProjectBaselineLines" PropertyName="ArchitectureLocProjectBaselineLines" />
       <Output TaskParameter="SolutionAddedLines" PropertyName="ArchitectureLocSolutionAddedLines" />
       <Output TaskParameter="SolutionBaselineLines" PropertyName="ArchitectureLocSolutionBaselineLines" />
       <Output TaskParameter="AddedProductionLines" PropertyName="ArchitectureLocAddedProductionLines" />
       <Output TaskParameter="AddedTestLines" PropertyName="ArchitectureLocAddedTestLines" />
+      <Output TaskParameter="BaselineFiles" ItemName="_ArchitectureComplexityBaseline" />
     </ComputeLocBudget>
+
+    <!-- Custom metadata carries over, so the analyzer can tell these apart from other AdditionalFiles. -->
+    <ItemGroup>
+      <AdditionalFiles Include="@(_ArchitectureComplexityBaseline)" />
+    </ItemGroup>
   </Target>
 
 </Project>

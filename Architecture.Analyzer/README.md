@@ -35,6 +35,7 @@ Adding the package drops a default `.editorconfig` at the consumer project root 
 | `ARCH019` | Detects a method whose body duplicates another one (copy/paste, renamed) | `architecture_analyzer.duplicate_code_similarity_percent` / `..._min_tokens` |
 | `ARCH020` | A type must not reuse the name of a type already available from a referenced project | `architecture_analyzer.duplicate_type_name_scope` / `..._exceptions` |
 | `ARCH021` | A prompt that adds production code must add tests too (solution-wide ratio) | `architecture_analyzer.min_test_lines_percent` + shipped MSBuild target |
+| `ARCH022` | **Ratchet** — a method's cyclomatic complexity may never increase | `architecture_analyzer.complexity_ratchet_allowed_increase` + shipped MSBuild target |
 
 ## Configuring the rules
 
@@ -338,6 +339,24 @@ architecture_analyzer.duplicate_type_name_exceptions = Program;Startup
 **It filters itself.** Two independent applications that do not reference each other cannot see each other's types, so a `Portal.AccountController` and an `SSO.AccountController` are never reported — that is normal MVC convention. Only "I had access to the original and redeclared it anyway" surfaces.
 
 **Never reported:** nested types (their name is already qualified by the enclosing type), `internal` types of referenced assemblies (they could not have been reused), a different generic arity (`Wrapper<T>` vs `Wrapper`), and anything listed in the exceptions. Namespaces are deliberately ignored: the colliding *name* is the signal.
+
+### ARCH022 — The complexity ratchet
+
+**A method's cyclomatic complexity may stay equal or go down. Never up.**
+
+Unlike a ceiling ("no method above 20"), a ratchet needs no arbitrary threshold and **no baseline file**: it only ever looks at what *this* change made worse. That is what makes it switchable on, as-is, on a legacy code base of any size — the existing mess becomes the reference point, and you simply stop adding to it.
+
+```ini
+[*.cs]
+# How much a method may grow before it is reported. 0 (the default) is a strict ratchet.
+architecture_analyzer.complexity_ratchet_allowed_increase = 0
+```
+
+**How the comparison works.** The shipped MSBuild target extracts the `HEAD` version of every changed `.cs` file (`git show HEAD:<file>`) into `obj/`, and hands them to the analyzer as `AdditionalFiles`. The analyzer parses both versions and compares them method by method. Methods are matched on *type + name + parameter count*, never on line numbers, so moving a method inside its file does not lose its history.
+
+Complexity is the classic count: 1, plus one per decision point (`if`, loops, `case`, `catch`, `&&`, `||`, `?:`, `??`, switch arms, `when`). `else` adds nothing — it belongs to the `if` already counted.
+
+**Never reported:** a method absent from `HEAD` (it is new, so it degraded nothing), a file that did not change, and anything below the allowed increase. As with the LOC budget, the reference is `HEAD`, so committing moves the ratchet forward.
 
 ## Full worked example
 
