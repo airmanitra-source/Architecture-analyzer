@@ -202,4 +202,10 @@
   <data name="ComplexityHotspotMessageFormat" xml:space="preserve">
     <value>Complexity of '{0}' goes from {1} to {2} in a file changed {3} times recently: this is where debt costs the most. Split the method instead of growing it.</value>
   </data>
+  <data name="ConventionTitle" xml:space="preserve">
+    <value>This type deviates from a convention observed in the project</value>
+  </data>
+  <data name="ConventionMessageFormat" xml:space="preserve">
+    <value>Out of {0} '*{1}' types, {2} share {3} = '{4}'; '{5}' has '{6}'. Align it with the convention, or declare the exception (convention_ignore = {1}&gt;{3}).</value>
+  </data>
 </root>

@@ -485,5 +485,23 @@ namespace Architecture.Analyzer {
                 return ResourceManager.GetString("ComplexityHotspotMessageFormat", resourceCulture);
             }
         }
+
+        /// <summary>
+        ///   Recherche une chaîne localisée semblable à Ce type dévie d&apos;une convention observée dans le projet.
+        /// </summary>
+        internal static string ConventionTitle {
+            get {
+                return ResourceManager.GetString("ConventionTitle", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Recherche une chaîne localisée semblable à Sur {0} types &apos;*{1}&apos;, {2} partagent {3} = &apos;{4}&apos; ; &apos;{5}&apos; a &apos;{6}&apos;..
+        /// </summary>
+        internal static string ConventionMessageFormat {
+            get {
+                return ResourceManager.GetString("ConventionMessageFormat", resourceCulture);
+            }
+        }
     }
 }

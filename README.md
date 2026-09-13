@@ -47,6 +47,7 @@ Adding the package drops a default `.editorconfig` at the consumer project root 
 | `ARCH021` | A prompt that adds production code must add tests too (solution-wide ratio) | `architecture_analyzer.min_test_lines_percent` + shipped MSBuild target |
 | `ARCH022` | **Ratchet** — a method's cyclomatic complexity may never increase | `architecture_analyzer.complexity_ratchet_allowed_increase` + shipped MSBuild target |
 | `ARCH023` | **Ratchet, strict mode** — complexity rising in a churn hotspot (error) | `architecture_analyzer.hotspot_churn_percentile` / `..._churn_window_days` |
+| `ARCH024` | **Inferred conventions** — a new type deviates from a regularity the project already follows (learned, not configured) | `architecture_analyzer.convention_min_support` / `..._min_ratio` / `..._ignore` |
 
 ## Configuring the rules
 
@@ -391,6 +392,29 @@ architecture_analyzer.churn_window_days = 90
 **Churn does not measure anything — it selects.** This is the key design point: churn can only ever grow (every commit increases it), so it could never be ratcheted itself. Instead it is used as a *targeting* mechanism: it decides which files get the strict treatment. The rule therefore reads as *"you may add complexity, except where it is dangerous"* — which is precisely the answer to the objection that complexity is sometimes a legitimate evolution.
 
 The count comes from `git log --no-merges --since=<window> --name-only`, written once per repository into the system temp folder and shared by every project of the solution rather than recomputed for each. A file below the minimum (3 recent changes) is never a hotspot, however small the repository.
+
+### ARCH024 — Conventions inferred from the code itself
+
+Every analyzer makes you *declare* your conventions. But a code base already **has** conventions — they are just implicit. ARCH024 learns them and flags the types that break them:
+
+> *Out of 18 `*Provider` types, 17 share folder = `Infrastructure/Providers`; `SmtpProvider` has `Services`. Align it with the convention, or declare the exception.*
+
+Nobody wrote that rule. It was **observed**.
+
+**How it learns.** For each type, the analyzer extracts a few traits — folder, namespace, kind (`class`/`record`/`struct`), `sealed`, `static`, accessibility, base type — and groups types by the suffix of their name (`CustomerBusinessModel` is grouped both as `*BusinessModel` and, more broadly, as `*Model`; the more specific suffix wins). Whenever a suffix has enough examples and a trait shares one value in at least 90% of them, that is a convention.
+
+**What it enforces.** Conventions are learned on **every** type of the project — the legacy majority defines the norm — but deviations are reported **only in the files the current change touched**. Existing outliers are never surfaced; only new code must conform. Without the change list produced by the shipped MSBuild target, the rule stays silent.
+
+```ini
+[*.cs]
+architecture_analyzer.convention_min_support = 5    # examples needed before a regularity counts
+architecture_analyzer.convention_min_ratio = 90     # share the majority value must reach
+architecture_analyzer.convention_ignore = Provider>folder;Model>sealed   # conventions to leave alone
+```
+
+**Additive to ARCH001 / ARCH003.** The explicit rule wins: for any suffix you configured in `model_suffix`, `model_conventions` or `model_folder_allowed_suffixes`, no *folder* convention is inferred, so a deviation is never reported twice. Every other trait of that suffix is still learned.
+
+**Why a warning.** The majority can be the mistake, and only a human can tell. The message shows its evidence — "17 of 18" — precisely so that call takes ten seconds. A majority of "not sealed", "not static" or "no base type" is just the default and is never treated as a convention.
 
 ## Full worked example
 

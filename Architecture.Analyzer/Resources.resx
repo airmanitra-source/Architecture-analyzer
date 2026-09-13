@@ -202,4 +202,10 @@
   <data name="ComplexityHotspotMessageFormat" xml:space="preserve">
     <value>La complexité de '{0}' passe de {1} à {2} dans un fichier modifié {3} fois récemment : c'est là que la dette coûte le plus cher. Découpe la méthode au lieu de l'alourdir.</value>
   </data>
+  <data name="ConventionTitle" xml:space="preserve">
+    <value>Ce type dévie d'une convention observée dans le projet</value>
+  </data>
+  <data name="ConventionMessageFormat" xml:space="preserve">
+    <value>Sur {0} types '*{1}', {2} partagent {3} = '{4}' ; '{5}' a '{6}'. Aligne-le sur la convention, ou déclare l'exception (convention_ignore = {1}&gt;{3}).</value>
+  </data>
 </root>

@@ -15,6 +15,7 @@
     <CompilerVisibleProperty Include="ArchitectureLocAddedTestLines" />
     <CompilerVisibleItemMetadata Include="AdditionalFiles" MetadataName="ArchitectureBaselineFor" />
     <CompilerVisibleItemMetadata Include="AdditionalFiles" MetadataName="ArchitectureChurnTable" />
+    <CompilerVisibleItemMetadata Include="AdditionalFiles" MetadataName="ArchitectureChangedFiles" />
   </ItemGroup>
 
   <UsingTask
@@ -28,6 +29,7 @@
       <BaselineDirectory ParameterType="System.String" Required="false" />
       <BaselineFiles ParameterType="Microsoft.Build.Framework.ITaskItem[]" Output="true" />
       <ChurnTable ParameterType="Microsoft.Build.Framework.ITaskItem[]" Output="true" />
+      <ChangedFiles ParameterType="Microsoft.Build.Framework.ITaskItem[]" Output="true" />
       <ProjectAddedLines ParameterType="System.Int32" Output="true" />
       <ProjectBaselineLines ParameterType="System.Int32" Output="true" />
       <SolutionAddedLines ParameterType="System.Int32" Output="true" />
@@ -61,6 +63,12 @@ namespace Architecture.Analyzer.Build
 
         // How often each file changed recently. One shared table per repository, not per project.
         [Output] public ITaskItem[] ChurnTable { get; set; }
+
+        // The files this change touched (modified or added), so rules that only judge new code know
+        // which types are new.
+        [Output] public ITaskItem[] ChangedFiles { get; set; }
+
+        private readonly List<string> _changedPaths = new List<string>();
 
         [Output] public int ProjectAddedLines { get; set; }
         [Output] public int ProjectBaselineLines { get; set; }
@@ -123,6 +131,7 @@ namespace Architecture.Analyzer.Build
                     var full = ToFullPath(root, columns[2]);
                     SolutionAddedLines += added;
                     Accumulate(columns[2], added, testPatterns);
+                    _changedPaths.Add(full);
                     if (projectFiles.Contains(full))
                     {
                         ProjectAddedLines += added;
@@ -137,6 +146,7 @@ namespace Architecture.Analyzer.Build
                     var added = CountLines(full);
                     SolutionAddedLines += added;
                     Accumulate(relative, added, testPatterns);
+                    _changedPaths.Add(full);
                     if (projectFiles.Contains(full))
                     {
                         ProjectAddedLines += added;
@@ -159,6 +169,7 @@ namespace Architecture.Analyzer.Build
 
                 BaselineFiles = WriteHeadBaseline();
                 ChurnTable = WriteChurnTable();
+                ChangedFiles = WriteChangedFiles();
 
                 LogBudgetGauge();
                 return true;
@@ -240,6 +251,22 @@ namespace Architecture.Analyzer.Build
         private static bool IsFresh(string path)
             => File.Exists(path)
                && (DateTime.UtcNow - File.GetLastWriteTimeUtc(path)).TotalMinutes < ChurnCacheMinutes;
+
+        private ITaskItem[] WriteChangedFiles()
+        {
+            if (string.IsNullOrEmpty(BaselineDirectory) || _changedPaths.Count == 0)
+            {
+                return new ITaskItem[0];
+            }
+
+            Directory.CreateDirectory(BaselineDirectory);
+            var target = Path.Combine(BaselineDirectory, "changed-files.txt");
+            File.WriteAllLines(target, _changedPaths);
+
+            var item = new TaskItem(target);
+            item.SetMetadata("ArchitectureChangedFiles", "true");
+            return new ITaskItem[] { item };
+        }
 
         private const int MaxBaselineFiles = 200;
         private const char Quote = '"';
@@ -675,12 +702,14 @@ namespace Architecture.Analyzer.Build
       <Output TaskParameter="AddedTestLines" PropertyName="ArchitectureLocAddedTestLines" />
       <Output TaskParameter="BaselineFiles" ItemName="_ArchitectureComplexityBaseline" />
       <Output TaskParameter="ChurnTable" ItemName="_ArchitectureChurnTable" />
+      <Output TaskParameter="ChangedFiles" ItemName="_ArchitectureChangedFiles" />
     </ComputeLocBudget>
 
     <!-- Custom metadata carries over, so the analyzer can tell these apart from other AdditionalFiles. -->
     <ItemGroup>
       <AdditionalFiles Include="@(_ArchitectureComplexityBaseline)" />
       <AdditionalFiles Include="@(_ArchitectureChurnTable)" />
+      <AdditionalFiles Include="@(_ArchitectureChangedFiles)" />
     </ItemGroup>
   </Target>
 

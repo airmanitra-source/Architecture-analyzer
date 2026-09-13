@@ -67,3 +67,11 @@ architecture_analyzer.model_folder_allowed_suffixes = Models/Business=BusinessMo
 # Il ne peut que croitre, il ne serait donc pas ratchetable lui-meme.
 # architecture_analyzer.hotspot_churn_percentile = 90
 # architecture_analyzer.churn_window_days = 90
+
+# Conventions inferees du code — ARCH024.
+# Apprend les regularites du projet (dossier, nature, sealed, type de base... par suffixe)
+# et signale, dans les fichiers modifies uniquement, les types qui s'en ecartent.
+# Additive a ARCH001/003 : un suffixe configure la-bas garde sa regle explicite.
+# architecture_analyzer.convention_min_support = 5
+# architecture_analyzer.convention_min_ratio = 90
+# architecture_analyzer.convention_ignore = Provider>folder
