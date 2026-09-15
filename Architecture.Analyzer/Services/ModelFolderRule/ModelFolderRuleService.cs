@@ -11,6 +11,7 @@ internal sealed class ModelFolderRuleService : IModelFolderRuleService
 {
     private const string AnalyzerConfigPrefix = "architecture_analyzer.";
     private const string ModelFolderAllowedSuffixesOption = AnalyzerConfigPrefix + "model_folder_allowed_suffixes";
+    private const string ProjectAllowedFilesOption = AnalyzerConfigPrefix + "project_allowed_files";
     private char[] FolderSeparator = new[] { ',', '|' };
     private const char RuleSeparator = ';';
     private const string RuleValueSeparator = "=";
@@ -45,6 +46,50 @@ internal sealed class ModelFolderRuleService : IModelFolderRuleService
             }
 
             rules.Add(new ModelFolderSuffixRule(folder, allowedSuffixes));
+        }
+
+        return rules;
+    }
+
+    public List<ProjectFileRule> ReadProjectFileRules(AnalyzerConfigOptions options)
+    {
+        if (!options.TryGetValue(ProjectAllowedFilesOption, out var configuredRules)
+            || string.IsNullOrWhiteSpace(configuredRules))
+        {
+            return [];
+        }
+
+        var rules = new List<ProjectFileRule>();
+        foreach (var item in configuredRules.Split(new[] { RuleSeparator }, StringSplitOptions.RemoveEmptyEntries))
+        {
+            var parts = item.Split(new[] { RuleValueSeparator }, 2, StringSplitOptions.None);
+            if (parts.Length != 2)
+            {
+                continue;
+            }
+
+            var project = NamePattern.Parse(parts[0]);
+            if (project is null)
+            {
+                continue;
+            }
+
+            var patterns = new List<NamePattern>();
+            foreach (var token in parts[1].Split(FolderSeparator, StringSplitOptions.RemoveEmptyEntries))
+            {
+                var pattern = NamePattern.Parse(token);
+                if (pattern is not null)
+                {
+                    patterns.Add(pattern.Value);
+                }
+            }
+
+            if (patterns.Count == 0)
+            {
+                continue;
+            }
+
+            rules.Add(new ProjectFileRule(project.Value, patterns, parts[1].Trim()));
         }
 
         return rules;

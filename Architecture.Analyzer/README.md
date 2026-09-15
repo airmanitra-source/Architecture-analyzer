@@ -98,6 +98,17 @@ With the config above, a `CustomerDataModel` under `Models/Business/` reports AR
 
 Note: `ARCH003` is reused by the `ModuleProviderAnalyzer` for "module projects must ship at least one provider interface under `Models/Data/Providers/`"  no `.editorconfig` needed there (see next section).
 
+**Strict per-project file allow-list.** `ARCH003` is also reused to whitelist which files may live in a project. When a project's assembly name matches a configured pattern, every `.cs` file whose name matches none of the allowed patterns is reported. Patterns use the ARCH016 syntax (`*X` suffix, `X*` prefix, `X` exact, `*X*` contains):
+
+```ini
+[*.cs]
+architecture_analyzer.project_allowed_files = \
+  *.Contracts=*Dto.cs,*Request.cs,*Response.cs;\
+  *.Handlers=*Handler.cs
+```
+
+So in any `*.Contracts` project, a `Helper.cs` is reported because it matches none of `*Dto.cs`, `*Request.cs`, `*Response.cs`. Projects with no matching pattern are never restricted, and generated files are ignored.
+
 ### ARCH004  Providers must not be implemented inside a module project
 
 Fires automatically when:

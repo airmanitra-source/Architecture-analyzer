@@ -112,6 +112,12 @@
   <data name="ModelFolderAllowedMessageFormat" xml:space="preserve">
     <value>Le type '{0}' n'est pas autorisé dans le dossier '{1}'. Suffixes autorisés : '{2}'.</value>
   </data>
+  <data name="ModelProjectFileTitle" xml:space="preserve">
+    <value>Fichier non autorisé dans ce projet</value>
+  </data>
+  <data name="ModelProjectFileMessageFormat" xml:space="preserve">
+    <value>Le fichier '{0}' n'est pas autorisé dans le projet '{1}' : seuls les motifs '{2}' y sont permis. Déplace-le ou renomme-le.</value>
+  </data>
   <data name="MissingProviderContractsTitle" xml:space="preserve">
     <value>Contrats providers manquants dans un module</value>
   </data>

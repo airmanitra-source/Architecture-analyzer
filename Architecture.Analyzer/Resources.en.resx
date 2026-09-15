@@ -112,6 +112,12 @@
   <data name="ModelFolderAllowedMessageFormat" xml:space="preserve">
     <value>Type '{0}' is not allowed in folder '{1}'. Allowed suffixes: '{2}'.</value>
   </data>
+  <data name="ModelProjectFileTitle" xml:space="preserve">
+    <value>File not allowed in this project</value>
+  </data>
+  <data name="ModelProjectFileMessageFormat" xml:space="preserve">
+    <value>File '{0}' is not allowed in project '{1}': only the patterns '{2}' are permitted here. Move or rename it.</value>
+  </data>
   <data name="MissingProviderContractsTitle" xml:space="preserve">
     <value>Missing provider contracts in a module</value>
   </data>

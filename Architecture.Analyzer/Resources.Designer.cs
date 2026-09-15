@@ -259,6 +259,24 @@ namespace Architecture.Analyzer {
         }
 
         /// <summary>
+        ///   Recherche une chaîne localisée semblable à Fichier non autorisé dans ce projet.
+        /// </summary>
+        internal static string ModelProjectFileTitle {
+            get {
+                return ResourceManager.GetString("ModelProjectFileTitle", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Recherche une chaîne localisée semblable à Le fichier '{0}' n'est pas autorisé dans le projet '{1}'....
+        /// </summary>
+        internal static string ModelProjectFileMessageFormat {
+            get {
+                return ResourceManager.GetString("ModelProjectFileMessageFormat", resourceCulture);
+            }
+        }
+
+        /// <summary>
         ///   Recherche une chaîne localisée semblable à Dossier requis manquant dans le projet.
         /// </summary>
         internal static string RequiredProjectFolderTitle {
