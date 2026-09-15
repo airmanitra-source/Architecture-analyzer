@@ -13,10 +13,12 @@ architecture_analyzer.model_conventions = BusinessModel=Models/Business;DataMode
 architecture_analyzer.model_folder_allowed_suffixes = Models/Business=BusinessModel;Models/Data=DataModel
 
 # Liste blanche de fichiers par projet — ARCH003 (mode strict).
-# Dans un projet dont le nom d'assembly correspond au motif, tout fichier .cs dont le NOM ne
-# correspond a aucun des motifs permis est interdit. Motifs facon ARCH016 : *X suffixe, X* prefixe,
-# X exact, *X* contient. Cle projet et motifs separes par ',' ou '|', regles par ';'. Desactivee si absente.
-# architecture_analyzer.project_allowed_files = *.Contracts=*Dto.cs,*Request.cs,*Response.cs;*.Handlers=*Handler.cs
+# Dans un projet dont le nom d'assembly correspond au motif, tout fichier .cs qui ne correspond a
+# aucun motif permis est interdit. Un motif SANS '/' porte sur le NOM du fichier, ou qu'il soit
+# (ex. *Dto.cs). Un motif AVEC '/' porte sur le CHEMIN relatif au projet (ex. Models/*BusinessModel.cs
+# n'autorise ce nom que sous Models/). '*' = un segment, '**' = plusieurs. Cle projet et motifs separes
+# par ',' ou '|', regles par ';'. Desactivee si absente.
+# architecture_analyzer.project_allowed_files = *.Contracts=Models/*Dto.cs,*Request.cs;*.Module=Models/*BusinessModel.cs
 
 # Longueur minimale du nom d'une variable (variables locales et champs) — ARCH013.
 # Règle désactivée si la clé est absente. Décommentez pour l'activer.

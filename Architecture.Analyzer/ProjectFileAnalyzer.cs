@@ -1,3 +1,4 @@
+using System;
 using System.IO;
 using System.Collections.Immutable;
 using System.Linq;
@@ -82,22 +83,29 @@ public sealed class ProjectFileAnalyzer : DiagnosticAnalyzer
                 return;
             }
 
+            // The project directory lets folder-bearing patterns match a path relative to the project
+            // root; it is absent in some setups, and the matcher then falls back to a path suffix.
+            startContext.Options.AnalyzerConfigOptionsProvider.GlobalOptions.TryGetValue("build_property.ProjectDir", out var projectDir);
+
             var matchedRule = matching;
-            startContext.RegisterSyntaxTreeAction(treeContext => AnalyzeTree(treeContext, matchedRule, assemblyName));
+            startContext.RegisterSyntaxTreeAction(treeContext => AnalyzeTree(treeContext, matchedRule, assemblyName, projectDir));
         });
     }
 
-    private void AnalyzeTree(SyntaxTreeAnalysisContext context, ProjectFileRule rule, string? assemblyName)
+    private void AnalyzeTree(SyntaxTreeAnalysisContext context, ProjectFileRule rule, string? assemblyName, string? projectDir)
     {
-        var fileName = Path.GetFileName(context.Tree.FilePath);
+        var fullPath = context.Tree.FilePath;
+        var fileName = Path.GetFileName(fullPath);
         if (string.IsNullOrEmpty(fileName))
         {
             return;
         }
 
+        var relativePath = ComputeRelativePath(fullPath, projectDir);
+
         foreach (var pattern in rule.AllowedFiles)
         {
-            if (pattern.Matches(fileName))
+            if (FilePatternMatcher.Matches(pattern, fileName, relativePath, fullPath))
             {
                 return;
             }
@@ -106,8 +114,27 @@ public sealed class ProjectFileAnalyzer : DiagnosticAnalyzer
         context.ReportDiagnostic(Diagnostic.Create(
             Rule,
             Location.Create(context.Tree, new TextSpan(0, 0)),
-            fileName,
+            relativePath ?? fileName,
             assemblyName ?? rule.Project.Raw,
             rule.RawAllowed));
+    }
+
+    private static string? ComputeRelativePath(string fullPath, string? projectDir)
+    {
+        if (string.IsNullOrEmpty(projectDir) || string.IsNullOrEmpty(fullPath))
+        {
+            return null;
+        }
+
+        var root = projectDir!.Replace('\\', '/').TrimEnd('/');
+        if (root.Length == 0)
+        {
+            return null;
+        }
+
+        var path = fullPath.Replace('\\', '/');
+        return path.StartsWith(root + "/", StringComparison.OrdinalIgnoreCase)
+            ? path.Substring(root.Length + 1)
+            : null;
     }
 }

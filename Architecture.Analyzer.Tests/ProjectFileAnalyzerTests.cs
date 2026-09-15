@@ -76,6 +76,39 @@ public sealed class ProjectFileAnalyzerTests
         Assert.Equal(DiagnosticSeverity.Error, Assert.Single(diagnostics, d => d.Id == ProjectFileAnalyzer.DiagnosticId).Severity);
     }
 
+    [Fact]
+    public async Task FolderPatternAllowsAFileInTheRightFolder()
+    {
+        var diagnostics = await Run("Acme.Module", new Dictionary<string, string>
+        {
+            [Option] = "*.Module=Models/*BusinessModel.cs",
+        }, ("Models/CustomerBusinessModel.cs", "public class CustomerBusinessModel { }"));
+
+        Assert.DoesNotContain(diagnostics, d => d.Id == ProjectFileAnalyzer.DiagnosticId);
+    }
+
+    [Fact]
+    public async Task FolderPatternForbidsTheRightNameInTheWrongFolder()
+    {
+        var diagnostics = await Run("Acme.Module", new Dictionary<string, string>
+        {
+            [Option] = "*.Module=Models/*BusinessModel.cs",
+        }, ("Services/CustomerBusinessModel.cs", "public class CustomerBusinessModel { }"));
+
+        Assert.Contains(diagnostics, d => d.Id == ProjectFileAnalyzer.DiagnosticId);
+    }
+
+    [Fact]
+    public async Task FolderPatternForbidsTheWrongNameInTheRightFolder()
+    {
+        var diagnostics = await Run("Acme.Module", new Dictionary<string, string>
+        {
+            [Option] = "*.Module=Models/*BusinessModel.cs",
+        }, ("Models/Helper.cs", "public class Helper { }"));
+
+        Assert.Contains(diagnostics, d => d.Id == ProjectFileAnalyzer.DiagnosticId);
+    }
+
     private static Task<List<Diagnostic>> Run(
         string projectName,
         IReadOnlyDictionary<string, string>? config,

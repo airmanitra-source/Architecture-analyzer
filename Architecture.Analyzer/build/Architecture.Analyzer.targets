@@ -19,6 +19,9 @@
     <CompilerVisibleItemMetadata Include="AdditionalFiles" MetadataName="ArchitectureChangedTestFile" />
     <CompilerVisibleItemMetadata Include="AdditionalFiles" MetadataName="ArchitectureOscillationRemoved" />
     <CompilerVisibleItemMetadata Include="AdditionalFiles" MetadataName="ArchitectureOscillationAdded" />
+    <!-- So ARCH003's per-project file allow-list can match a path relative to the project root
+         (folder-bearing patterns like Models/*BusinessModel.cs), not just the file name. -->
+    <CompilerVisibleProperty Include="ProjectDir" />
   </ItemGroup>
 
   <!-- The build-time task, compiled from real .cs files in Architecture.Analyzer.Build and packed

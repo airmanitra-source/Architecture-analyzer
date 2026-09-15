@@ -74,13 +74,13 @@ internal sealed class ModelFolderRuleService : IModelFolderRuleService
                 continue;
             }
 
-            var patterns = new List<NamePattern>();
+            var patterns = new List<string>();
             foreach (var token in parts[1].Split(FolderSeparator, StringSplitOptions.RemoveEmptyEntries))
             {
-                var pattern = NamePattern.Parse(token);
-                if (pattern is not null)
+                var trimmed = token.Trim();
+                if (trimmed.Length != 0)
                 {
-                    patterns.Add(pattern.Value);
+                    patterns.Add(trimmed);
                 }
             }
 
