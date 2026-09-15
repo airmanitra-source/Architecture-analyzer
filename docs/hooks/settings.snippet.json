@@ -1,0 +1,16 @@
+{
+  "//": "A fusionner dans .claude/settings.json (projet) ou .claude/settings.local.json (local, non versionne).",
+  "//pwsh": "Utilise 'powershell' au lieu de 'pwsh' si tu n'as pas PowerShell 7+.",
+  "hooks": {
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "pwsh -NoProfile -File \"${CLAUDE_PROJECT_DIR}/.claude/hooks/capture-prompt.ps1\""
+          }
+        ]
+      }
+    ]
+  }
+}

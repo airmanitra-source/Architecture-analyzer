@@ -184,6 +184,18 @@
   <data name="TestRatioMessageFormat" xml:space="preserve">
     <value>Ce prompt ajoute {0} ligne(s) de production pour seulement {1} ligne(s) de test (ratio {2} %, minimum {3} %) : ajoute des tests avant d'aller plus loin.</value>
   </data>
+  <data name="TestLinkTitle" xml:space="preserve">
+    <value>Code ajouté sans test qui l'exerce</value>
+  </data>
+  <data name="TestLinkMessageFormat" xml:space="preserve">
+    <value>'{0}' a été ajouté ou modifié par ce changement mais aucun test ajouté ou modifié ne l'exerce ({3} test(s) modifié(s) référencent {2}, aucun n'appelle {1} avec une assertion) : ajoute un test qui construit {2} et vérifie le résultat de {1}, puis relance la compilation.</value>
+  </data>
+  <data name="OscillationTitle" xml:space="preserve">
+    <value>Réintroduction de code récemment supprimé</value>
+  </data>
+  <data name="OscillationMessageFormat" xml:space="preserve">
+    <value>Ce changement réintroduit un bloc de code que le commit {0} ({1}) avait supprimé il y a {2} commit(s).</value>
+  </data>
   <data name="DuplicateTypeNameTitle" xml:space="preserve">
     <value>Ce nom de type existe déjà dans un projet référencé</value>
   </data>

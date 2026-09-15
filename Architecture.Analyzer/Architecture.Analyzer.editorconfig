@@ -50,6 +50,29 @@ architecture_analyzer.model_folder_allowed_suffixes = Models/Business=BusinessMo
 # architecture_analyzer.test_ratio_min_added_lines = 50
 # architecture_analyzer.test_file_patterns = /tests/;.tests/;tests.cs;test.cs;spec.cs
 
+# Lien de test : un membre ajoute doit etre exerce par un test ajoute — ARCH025.
+# La ou ARCH021 mesure un VOLUME de lignes de test, ARCH025 exige que le test PORTE sur le
+# code change : une methode/un constructeur non prive, nouveau ou ayant grossi d'au moins le
+# plancher, doit etre appele par un test ajoute ou modifie dans le meme changement, avec une
+# assertion, dans un fichier qui reference le type concret (mocker l'interface ne compte pas).
+# Ne regarde que ce que le changement rend nouveau : aucun backlog sur du code existant.
+#   test_link_min_added_lines : active la regle et fixe le plancher (0 = off, suggere 3)
+#   test_link_exclude_paths   : fragments de chemin jamais responsables (migrations, controllers...)
+#   test_attribute_names      : attributs reconnus comme test (defaut Fact;Theory;Test;TestMethod...)
+#   test_assertion_patterns   : prefixes d'assertion (defaut Assert;Should;Verify;Received...)
+# Reutilise test_file_patterns d'ARCH021 pour classer les fichiers de test.
+# architecture_analyzer.test_link_min_added_lines = 3
+# architecture_analyzer.test_link_exclude_paths = /Migrations/;/Controllers/;Program.cs
+# architecture_analyzer.test_attribute_names = Fact;Theory;Test;TestCase;TestCaseSource;TestMethod;DataTestMethod
+# architecture_analyzer.test_assertion_patterns = Assert;Should;Verify;Received;DidNotReceive;Expect;Throws
+
+# Oscillation : ce changement reintroduit du code recemment supprime — ARCH027.
+# Signale, de facon FACTUELLE (avertissement, aucun jugement revert/thrashing), quand ce
+# changement re-ajoute un bloc de >= 3 lignes qu'un des N derniers commits avait supprime.
+# Inter-commits par nature : impossible pour un analyseur sans etat. Desactivee si la cle est absente.
+#   oscillation_window_commits : nombre de commits recents examines (0 = off, suggere 5)
+# architecture_analyzer.oscillation_window_commits = 5
+
 # Nom de type deja pris par un projet reference — ARCH020.
 # Portee par defaut : le premier segment du nom de l'assembly compile
 # (CyberPointNet.Portal ne se compare qu'aux CyberPointNet.*), jamais au framework.
@@ -75,3 +98,12 @@ architecture_analyzer.model_folder_allowed_suffixes = Models/Business=BusinessMo
 # architecture_analyzer.convention_min_support = 5
 # architecture_analyzer.convention_min_ratio = 90
 # architecture_analyzer.convention_ignore = Provider>folder
+
+# Historique d'impact (CSV) — 1A.
+# Ecrit une ligne dans .architecture/impact-history.csv a la racine du depot a chaque
+# changement significatif, avec le PROMPT qui l'a cause (fichier .architecture/current-prompt.txt
+# depose par un hook de l'outil d'IA, ou variable d'environnement ARCHITECTURE_ANALYZER_PROMPT).
+# Une seule ligne par prompt : les nombreux builds d'un meme prompt sont dedupliques.
+# OPT-IN : desactive par defaut, car il ecrit des fichiers dans le depot du consommateur.
+# Pense a ajouter .architecture/ a ton .gitignore.
+# architecture_analyzer.impact_history_enabled = true

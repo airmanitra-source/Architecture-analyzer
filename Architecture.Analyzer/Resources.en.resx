@@ -184,6 +184,18 @@
   <data name="TestRatioMessageFormat" xml:space="preserve">
     <value>This prompt adds {0} production line(s) for only {1} test line(s) (ratio {2}%, minimum {3}%): add tests before going further.</value>
   </data>
+  <data name="TestLinkTitle" xml:space="preserve">
+    <value>Added code without a test that exercises it</value>
+  </data>
+  <data name="TestLinkMessageFormat" xml:space="preserve">
+    <value>'{0}' was added or modified by this change but no added or modified test exercises it ({3} changed test(s) reference {2}, none calls {1} with an assertion): add a test that constructs {2} and asserts on the result of {1}, then rebuild.</value>
+  </data>
+  <data name="OscillationTitle" xml:space="preserve">
+    <value>Recently removed code is being re-added</value>
+  </data>
+  <data name="OscillationMessageFormat" xml:space="preserve">
+    <value>This change re-adds a block of code that commit {0} ({1}) removed {2} commit(s) ago.</value>
+  </data>
   <data name="DuplicateTypeNameTitle" xml:space="preserve">
     <value>This type name already exists in a referenced project</value>
   </data>

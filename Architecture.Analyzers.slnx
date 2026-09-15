@@ -8,5 +8,6 @@
     <File Path=".github/workflows/architecture-analyzer-nuget.yml" />
   </Folder>
   <Project Path="Architecture.Analyzer/Architecture.Analyzer.csproj" />
+  <Project Path="Architecture.Analyzer.Build/Architecture.Analyzer.Build.csproj" />
   <Project Path="Architecture.Analyzer.Tests/Architecture.Analyzer.Tests.csproj" />
 </Solution>

@@ -1,0 +1,28 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <LangVersion>latest</LangVersion>
+    <Nullable>disable</Nullable>
+    <!-- This is an MSBuild task assembly, packed into the analyzer NuGet under tasks/; it is never
+         published on its own and never referenced as a library. -->
+    <IsPackable>false</IsPackable>
+    <IncludeBuildOutput>false</IncludeBuildOutput>
+    <CopyLocalLockFileAssemblies>false</CopyLocalLockFileAssemblies>
+    <GenerateAssemblyInfo>true</GenerateAssemblyInfo>
+    <!-- NU1903 is raised for Microsoft.Build.Utilities.Core, which is a compile-time-only reference
+         (PrivateAssets=all, ExcludeAssets=runtime): the flagged runtime assembly is provided by the
+         MSBuild host and is never packed into our NuGet, so it cannot ship the vulnerability. -->
+    <NoWarn>$(NoWarn);NU1903</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Provided by the MSBuild host at build time, so referenced but never shipped. -->
+    <PackageReference Include="Microsoft.Build.Utilities.Core" Version="17.11.4" PrivateAssets="all" ExcludeAssets="runtime" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="Architecture.Analyzer.Tests" />
+  </ItemGroup>
+
+</Project>

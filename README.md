@@ -27,7 +27,7 @@ Adding the package drops a default `.editorconfig` at the consumer project root 
 | `ARCH001` | Model type is placed in the folder expected by its suffix | `architecture_analyzer.model_suffix` / `architecture_analyzer.model_folder` / `architecture_analyzer.model_conventions` |
 | `ARCH002` | The file name matches the type name | (no configuration) |
 | `ARCH003` | Only whitelisted suffixes are allowed inside a given folder / a module carries provider contracts | `architecture_analyzer.model_folder_allowed_suffixes` |
-| `ARCH004` | A module project does not implement its own provider interfaces | (auto — a project counts as a module when its assembly name ends with `.Module`) |
+| `ARCH004` | A module project does not implement its own provider interfaces | (auto  a project counts as a module when its assembly name ends with `.Module`) |
 | `ARCH005` | DTO properties are alphabetically ordered (identifier-like properties excluded) | (no configuration) |
 | `ARCH006` | Class body stays within its LOC ceiling | `architecture_analyzer.loc_max_lines_per_class` |
 | `ARCH007` | Method body stays within its LOC ceiling | `architecture_analyzer.loc_max_lines_per_method` |
@@ -40,20 +40,22 @@ Adding the package drops a default `.editorconfig` at the consumer project root 
 | `ARCH014` | Class name is at least N characters long | `architecture_analyzer.min_class_name_length` |
 | `ARCH015` | Method name is at least N characters long | `architecture_analyzer.min_method_name_length` |
 | `ARCH016` | A class whose name matches pattern X must not accept a method parameter whose type matches pattern Y | `architecture_analyzer.method_argument_type_barrier` |
-| `ARCH017` | Forbids `+` / `+=` string concatenation — use a `StringBuilder` | (no configuration) |
-| `ARCH018` | Forbids string interpolation (`$"..."`) — use a `StringBuilder` | (no configuration) |
+| `ARCH017` | Forbids `+` / `+=` string concatenation  use a `StringBuilder` | (no configuration) |
+| `ARCH018` | Forbids string interpolation (`$"..."`)  use a `StringBuilder` | (no configuration) |
 | `ARCH019` | Detects a method whose body duplicates another one (copy/paste, renamed) | `architecture_analyzer.duplicate_code_similarity_percent` / `..._min_tokens` |
 | `ARCH020` | A type must not reuse the name of a type already available from a referenced project | `architecture_analyzer.duplicate_type_name_scope` / `..._exceptions` |
 | `ARCH021` | A prompt that adds production code must add tests too (solution-wide ratio) | `architecture_analyzer.min_test_lines_percent` + shipped MSBuild target |
-| `ARCH022` | **Ratchet** — a method's cyclomatic complexity may never increase | `architecture_analyzer.complexity_ratchet_allowed_increase` + shipped MSBuild target |
-| `ARCH023` | **Ratchet, strict mode** — complexity rising in a churn hotspot (error) | `architecture_analyzer.hotspot_churn_percentile` / `..._churn_window_days` |
-| `ARCH024` | **Inferred conventions** — a new type deviates from a regularity the project already follows (learned, not configured) | `architecture_analyzer.convention_min_support` / `..._min_ratio` / `..._ignore` |
+| `ARCH022` | **Ratchet**  a method's cyclomatic complexity may never increase | `architecture_analyzer.complexity_ratchet_allowed_increase` + shipped MSBuild target |
+| `ARCH023` | **Ratchet, strict mode**  complexity rising in a churn hotspot (error) | `architecture_analyzer.hotspot_churn_percentile` / `..._churn_window_days` |
+| `ARCH024` | **Inferred conventions**  a new type deviates from a regularity the project already follows (learned, not configured) | `architecture_analyzer.convention_min_support` / `..._min_ratio` / `..._ignore` |
+| `ARCH025` | **Related-test gate**  a member this change adds or grows must be exercised by a test the same change adds (not just any test) | `architecture_analyzer.test_link_min_added_lines` + shipped MSBuild target |
+| `ARCH027` | **Oscillation**  this change re-adds a block of code a recent commit removed (warning, temporal) | `architecture_analyzer.oscillation_window_commits` + shipped MSBuild target |
 
 ## Configuring the rules
 
 ### Overriding severity (works for every rule)
 
-Every diagnostic is emitted as an error by default, except `ARCH022` which is a **warning** (a complexity increase is sometimes legitimate — see its section). Downgrade or silence one from any `.editorconfig`:
+Every diagnostic is emitted as an error by default, except `ARCH022` which is a **warning** (a complexity increase is sometimes legitimate  see its section). Downgrade or silence one from any `.editorconfig`:
 
 ```ini
 [*.cs]
@@ -63,9 +65,9 @@ dotnet_diagnostic.ARCH008.severity = suggestion
 dotnet_diagnostic.ARCH009.severity = none
 ```
 
-Localization: the analyzer ships a French neutral catalog and an English satellite (`en/Architecture.Analyzer.resources.dll`). The message rendered follows Roslyn's UI culture — no `.editorconfig` knob is needed. Ship a new `Resources.<culture>.resx` in the analyzer project to add a language.
+Localization: the analyzer ships a French neutral catalog and an English satellite (`en/Architecture.Analyzer.resources.dll`). The message rendered follows Roslyn's UI culture  no `.editorconfig` knob is needed. Ship a new `Resources.<culture>.resx` in the analyzer project to add a language.
 
-### ARCH001 — Model type in the expected folder
+### ARCH001  Model type in the expected folder
 
 Both suffix and folder can be tuned. Folder separators accept `/`, `\`, or `>` (`>` is handy in `.editorconfig` where `/` can be significant).
 
@@ -77,7 +79,7 @@ architecture_analyzer.model_suffix = ViewModel
 architecture_analyzer.model_folder = Presentation/ViewModels
 ```
 
-**Multiple conventions in one line** — this key, when present and non-empty, replaces the two above:
+**Multiple conventions in one line**  this key, when present and non-empty, replaces the two above:
 
 ```ini
 [*.cs]
@@ -86,11 +88,11 @@ architecture_analyzer.model_conventions = BusinessModel=Models/Business;DataMode
 
 The matching convention is the one with the **longest** suffix that matches the type name (so `CustomerBusinessModel` matches `BusinessModel`, not a shorter `Model`).
 
-### ARCH002 — File name matches type name
+### ARCH002  File name matches type name
 
 No configuration. `public class CustomerBusinessModel` must live in `CustomerBusinessModel.cs`. Fix by renaming either the file or the type.
 
-### ARCH003 — Whitelist of suffixes per folder
+### ARCH003  Whitelist of suffixes per folder
 
 Restrict which suffixes are allowed inside specific folders. Same folder separator flexibility as ARCH001; commas separate multiple suffixes for the same folder; semicolons separate the folder rules.
 
@@ -104,9 +106,9 @@ architecture_analyzer.model_folder_allowed_suffixes = \
 
 With the config above, a `CustomerDataModel` under `Models/Business/` reports ARCH003 because `Models/Business` only allows `BusinessModel`. When several folder rules match, the **deepest** wins (so `Models/Business/Sub` overrides `Models`). Types under a folder that has no rule are ignored.
 
-Note: `ARCH003` is reused by the `ModuleProviderAnalyzer` for "module projects must ship at least one provider interface under `Models/Data/Providers/`" — no `.editorconfig` needed there (see next section).
+Note: `ARCH003` is reused by the `ModuleProviderAnalyzer` for "module projects must ship at least one provider interface under `Models/Data/Providers/`"  no `.editorconfig` needed there (see next section).
 
-### ARCH004 — Providers must not be implemented inside a module project
+### ARCH004  Providers must not be implemented inside a module project
 
 Fires automatically when:
 
@@ -115,11 +117,11 @@ Fires automatically when:
 
 To fix, either move the implementation to an infrastructure project outside the module, or remove the `.Module` suffix from the project.
 
-### ARCH005 — DTO properties ordered alphabetically
+### ARCH005  DTO properties ordered alphabetically
 
 Applies to types whose name ends with `BusinessModel`, `DataModel`, or `ViewModel`. Identifier-like properties (containing `Id`) are ignored in the ordering check. No configuration; just reorder the properties.
 
-### ARCH006 / ARCH007 — Class / method size ceiling
+### ARCH006 / ARCH007  Class / method size ceiling
 
 Both default to **20 lines**. Override them per project or per folder:
 
@@ -137,9 +139,9 @@ architecture_analyzer.loc_max_lines_per_method = 200
 
 Set the value to a positive integer; anything else falls back to the default (20).
 
-### ARCH008 / ARCH009 — LOC budget "% of code added since HEAD"
+### ARCH008 / ARCH009  LOC budget "% of code added since HEAD"
 
-These two rules cap the **cumulative** lines of code added since `HEAD` — per project (ARCH009) and per solution (ARCH008) — as a percentage of the existing tracked C# code base. The percentages are read from `.editorconfig`; the actual line counts are computed by the MSBuild target [`build/Architecture.Analyzer.targets`](Architecture.Analyzer/build/Architecture.Analyzer.targets) shipped with the package, which shells out to `git` at build time and forwards the values through `CompilerVisibleProperty`.
+These two rules cap the **cumulative** lines of code added since `HEAD`  per project (ARCH009) and per solution (ARCH008)  as a percentage of the existing tracked C# code base. The percentages are read from `.editorconfig`; the actual line counts are computed by the MSBuild target [`build/Architecture.Analyzer.targets`](Architecture.Analyzer/build/Architecture.Analyzer.targets) shipped with the package, which shells out to `git` at build time and forwards the values through `CompilerVisibleProperty`.
 
 Enable the budgets in `.editorconfig`:
 
@@ -168,11 +170,11 @@ dotnet build /p:ArchitectureLocProjectBaselineLines=1000 \
              /p:ArchitectureLocSolutionAddedLines=120
 ```
 
-**Per-build gauge.** Whenever a budget percentage is set, the shipped MSBuild target prints the current usage on **every** build (project and solution), e.g. `[Architecture.Analyzer] LOC budget (project): 12/50 line(s) added since HEAD (24% of the 20% budget on 250 baseline line(s))`. This makes the pressure visible continuously — not only when the budget is blown — so you can course-correct before hitting the wall. Going over adds a `>>> OVER BUDGET (ARCHxxx)` marker (and ARCH008/ARCH009 still fail the build). The message reads the same `loc_budget_percent_*` keys from your `.editorconfig`, and is suppressed during IDE design-time builds. Like the ARCHxxx diagnostics, it follows the build's UI culture (French by default, English when the UI culture is English).
+**Per-build gauge.** Whenever a budget percentage is set, the shipped MSBuild target prints the current usage on **every** build (project and solution), e.g. `[Architecture.Analyzer] LOC budget (project): 12/50 line(s) added since HEAD (24% of the 20% budget on 250 baseline line(s))`. This makes the pressure visible continuously  not only when the budget is blown  so you can course-correct before hitting the wall. Going over adds a `>>> OVER BUDGET (ARCHxxx)` marker (and ARCH008/ARCH009 still fail the build). The message reads the same `loc_budget_percent_*` keys from your `.editorconfig`, and is suppressed during IDE design-time builds. Like the ARCHxxx diagnostics, it follows the build's UI culture (French by default, English when the UI culture is English).
 
 ![LOC budget gauge printed on every build, under budget and over budget](docs/loc-budget-gauge.png)
 
-### ARCH010 — Required folder per project
+### ARCH010  Required folder per project
 
 Enforce that a given project (matched by assembly name) contains at least one file under a specific folder. Same folder separator flexibility as ARCH001; commas separate multiple required folders for the same project; semicolons separate the project rules.
 
@@ -185,11 +187,11 @@ architecture_analyzer.required_project_folders = \
 
 With the config above, the `HR.Infrastructure` project reports ARCH010 (once, at compilation end) unless at least one `.cs` file lives under `Models/Entities`. Projects with no matching rule are ignored.
 
-### ARCH011 — Methods ordered alphabetically
+### ARCH011  Methods ordered alphabetically
 
 Applies to every class. Methods must be declared in alphabetical order (ordinal comparison). No configuration; just reorder the methods.
 
-### ARCH012 — Module reference barrier
+### ARCH012  Module reference barrier
 
 Forbid one module from referencing another. The syntax `B>A` means "B must not reference A". Multiple rules are separated by `;` (consistent with the analyzer's other multi-rule keys); `,` is also accepted.
 
@@ -212,13 +214,13 @@ architecture_analyzer.module_reference_barrier_exceptions = Program.cs;Startup.c
 
 With this config, `Program.cs` may reference `Infrastructure` freely while every other file in `Portal` still reports ARCH012.
 
-### ARCH013 / ARCH014 / ARCH015 — Minimum name length
+### ARCH013 / ARCH014 / ARCH015  Minimum name length
 
 Reject identifiers whose name is too short to be descriptive. The three rules are **independent** and each is **opt-in**: a rule fires only when its own key is set to a positive integer, and leaving a key unset disables that rule (there is no default minimum).
 
-- `ARCH013` covers **variables** — local variables and fields.
+- `ARCH013` covers **variables**  local variables and fields.
 - `ARCH014` covers **classes**.
-- `ARCH015` covers **methods** — the message reminds the author that a method name must be expressive and reflect the method's intent. Only names the app actually chooses are checked: a method that overrides a base member or implements an interface member declared in a **referenced assembly** (NuGet, Microsoft, etc.) is exempt, because that name is imposed by the external contract. Overrides and interface implementations of the app's **own** base classes or interfaces are still checked (the name was chosen in your code).
+- `ARCH015` covers **methods**  the message reminds the author that a method name must be expressive and reflect the method's intent. Only names the app actually chooses are checked: a method that overrides a base member or implements an interface member declared in a **referenced assembly** (NuGet, Microsoft, etc.) is exempt, because that name is imposed by the external contract. Overrides and interface implementations of the app's **own** base classes or interfaces are still checked (the name was chosen in your code).
 
 ```ini
 [*.cs]
@@ -241,11 +243,11 @@ dotnet_diagnostic.ARCH014.severity = none
 dotnet_diagnostic.ARCH015.severity = none
 ```
 
-### ARCH016 — Method argument type barrier
+### ARCH016  Method argument type barrier
 
 Forbid the methods of a class from accepting a certain kind of object as a parameter, matched by name. The syntax `ClassPattern>ForbiddenTypePattern` means "a type whose name matches `ClassPattern` must not declare a method parameter whose type name matches `ForbiddenTypePattern`". Multiple rules are separated by `;` (consistent with the analyzer's other multi-rule keys); `,` is also accepted. The rule is opt-in: it fires only when the key is set.
 
-Each side is a pattern, and a leading and/or trailing `*` selects how it matches — so you can target a suffix, a prefix, the whole name, or a substring:
+Each side is a pattern, and a leading and/or trailing `*` selects how it matches  so you can target a suffix, a prefix, the whole name, or a substring:
 
 | Pattern | Matches | Example |
 |---------|---------|---------|
@@ -262,33 +264,33 @@ architecture_analyzer.method_argument_type_barrier = *Module>*DataModel
 
 With the config above, any class whose name ends with `Module` (e.g. `CustomerModule`) reports ARCH016 when one of its methods declares a parameter whose type ends with `DataModel` (e.g. `void Register(CustomerDataModel model)`). The check looks through arrays and generic type arguments, so `CustomerDataModel[]` and `Wrapper<CustomerDataModel>` are caught too. Matching is ordinal (case-sensitive), so a `CustomerViewModel` parameter does **not** match `*DataModel`. Only methods declared in a **class** are checked (records included); interfaces and structs are out of scope, and a generic method's own type parameters (e.g. `Register<TDataModel>(TDataModel item)`) are never treated as a forbidden type.
 
-### ARCH017 — No `+` string concatenation
+### ARCH017  No `+` string concatenation
 
-Forbids concatenating strings with `+` or `+=` — use a `StringBuilder` instead. Enabled by default; no configuration. A concatenation chain (`a + b + c`) is reported once, at the top of the chain.
+Forbids concatenating strings with `+` or `+=`  use a `StringBuilder` instead. Enabled by default; no configuration. A concatenation chain (`a + b + c`) is reported once, at the top of the chain.
 
-Two cases are deliberately **allowed**: compile-time-constant concatenations (literal-only expressions such as `"a" + "b"` and `const` fields — the compiler folds them, they cost nothing at runtime, and a `const` cannot use a `StringBuilder`), and user-defined `+` operators that return a string. Downgrade or silence per path with the usual override:
+Two cases are deliberately **allowed**: compile-time-constant concatenations (literal-only expressions such as `"a" + "b"` and `const` fields  the compiler folds them, they cost nothing at runtime, and a `const` cannot use a `StringBuilder`), and user-defined `+` operators that return a string. Downgrade or silence per path with the usual override:
 
 ```ini
 [*.cs]
 dotnet_diagnostic.ARCH017.severity = warning
 ```
 
-### ARCH018 — No string interpolation
+### ARCH018  No string interpolation
 
-Forbids string interpolation (`$"..."`) — use a `StringBuilder` instead. Enabled by default; no configuration. It is a sibling of ARCH017 with its own id, so you can tune the two independently. Each `$"..."` is one diagnostic (however many holes it has).
+Forbids string interpolation (`$"..."`)  use a `StringBuilder` instead. Enabled by default; no configuration. It is a sibling of ARCH017 with its own id, so you can tune the two independently. Each `$"..."` is one diagnostic (however many holes it has).
 
-**Allowed:** a hole-free interpolated string (`$"plain text"`) and a compile-time-constant interpolated string (all-constant holes / `const` fields — folded by the compiler, and a `const` cannot use a `StringBuilder`).
+**Allowed:** a hole-free interpolated string (`$"plain text"`) and a compile-time-constant interpolated string (all-constant holes / `const` fields  folded by the compiler, and a `const` cannot use a `StringBuilder`).
 
-Interpolation is pervasive (logging, formatting a single value, …), so shipping this as an error is aggressive — scope it to the paths you care about, or downgrade it:
+Interpolation is pervasive (logging, formatting a single value, …), so shipping this as an error is aggressive  scope it to the paths you care about, or downgrade it:
 
 ```ini
 [*.cs]
 dotnet_diagnostic.ARCH018.severity = warning
 ```
 
-### ARCH019 — Duplicated method bodies
+### ARCH019  Duplicated method bodies
 
-Flags a method whose body has the same **shape** as another method in the same compilation. The comparison runs on the sequence of token *kinds*, with identifiers and literal values discarded — so renaming the variables does not hide a copy. That is precisely how a coding agent duplicates a helper instead of reusing it.
+Flags a method whose body has the same **shape** as another method in the same compilation. The comparison runs on the sequence of token *kinds*, with identifiers and literal values discarded  so renaming the variables does not hide a copy. That is precisely how a coding agent duplicates a helper instead of reusing it.
 
 ```ini
 [*.cs]
@@ -310,7 +312,7 @@ The message names the method to reuse: *"`C.Second` duplicates `C.First` by 100%
 dotnet_diagnostic.ARCH019.severity = none
 ```
 
-### ARCH021 — Tests required for the code a prompt adds
+### ARCH021  Tests required for the code a prompt adds
 
 Caps how much production code a prompt may add **without tests**. The MSBuild target already counts the lines added since `HEAD`; this rule splits that figure between production and test files and compares the two.
 
@@ -321,7 +323,7 @@ The ratio is deliberately **solution-wide**, never per project: tests almost alw
 # For every 100 production lines added, at least 20 test lines must be added. Rule off when absent.
 architecture_analyzer.min_test_lines_percent = 20
 
-# Changes smaller than this are exempt — demanding tests for a 3-line fix only breeds filler tests.
+# Changes smaller than this are exempt  demanding tests for a 3-line fix only breeds filler tests.
 architecture_analyzer.test_ratio_min_added_lines = 50
 
 # How a file is recognised as a test file (path substrings / file-name suffixes).
@@ -332,31 +334,31 @@ A prompt adding 200 production lines and 10 test lines reports: *"adds 200 produ
 
 Never reported: a prompt that adds no production line (touching only tests), and any change below `test_ratio_min_added_lines`. Like ARCH008/ARCH009 the counter resets at each commit, so the budget is per increment. The per-build gauge prints the current ratio even when it passes, so the pressure is visible before the wall.
 
-### ARCH020 — A type name already taken by a referenced project
+### ARCH020  A type name already taken by a referenced project
 
 **Do not declare a type whose name already exists in something you reference.** If you could already see that type and you write another one with the same name, you copied it instead of using it.
 
 ```ini
 [*.cs]
 # Which assemblies count as "ours". Defaults to the first segment of the compiled assembly name,
-# so CyberPointNet.Portal compares itself only against CyberPointNet.* — never against the BCL.
+# so CyberPointNet.Portal compares itself only against CyberPointNet.*  never against the BCL.
 architecture_analyzer.duplicate_type_name_scope = CyberPointNet
 
 # Names allowed to repeat.
 architecture_analyzer.duplicate_type_name_exceptions = Program;Startup
 ```
 
-**Why it complements ARCH019.** ARCH019 compares method *bodies*, so it loses sight of a copy as soon as the two drift apart — precisely when the problem gets worse (several behaviours under one name). ARCH020 compares the *name*, which does not drift. It is the net that catches ageing duplication.
+**Why it complements ARCH019.** ARCH019 compares method *bodies*, so it loses sight of a copy as soon as the two drift apart  precisely when the problem gets worse (several behaviours under one name). ARCH020 compares the *name*, which does not drift. It is the net that catches ageing duplication.
 
-**It filters itself.** Two independent applications that do not reference each other cannot see each other's types, so a `Portal.AccountController` and an `SSO.AccountController` are never reported — that is normal MVC convention. Only "I had access to the original and redeclared it anyway" surfaces.
+**It filters itself.** Two independent applications that do not reference each other cannot see each other's types, so a `Portal.AccountController` and an `SSO.AccountController` are never reported  that is normal MVC convention. Only "I had access to the original and redeclared it anyway" surfaces.
 
 **Never reported:** nested types (their name is already qualified by the enclosing type), `internal` types of referenced assemblies (they could not have been reused), a different generic arity (`Wrapper<T>` vs `Wrapper`), and anything listed in the exceptions. Namespaces are deliberately ignored: the colliding *name* is the signal.
 
-### ARCH022 — The complexity ratchet
+### ARCH022  The complexity ratchet
 
 **A method's cyclomatic complexity may stay equal or go down. Never up.**
 
-Unlike a ceiling ("no method above 20"), a ratchet needs no arbitrary threshold and **no baseline file**: it only ever looks at what *this* change made worse. That is what makes it switchable on, as-is, on a legacy code base of any size — the existing mess becomes the reference point, and you simply stop adding to it.
+Unlike a ceiling ("no method above 20"), a ratchet needs no arbitrary threshold and **no baseline file**: it only ever looks at what *this* change made worse. That is what makes it switchable on, as-is, on a legacy code base of any size  the existing mess becomes the reference point, and you simply stop adding to it.
 
 ```ini
 [*.cs]
@@ -364,7 +366,7 @@ Unlike a ceiling ("no method above 20"), a ratchet needs no arbitrary threshold 
 architecture_analyzer.complexity_ratchet_allowed_increase = 0
 ```
 
-**Why a warning and not an error.** Unlike a duplicate or a name collision, a complexity increase is sometimes the legitimate evolution of the software: a new business case, a new failure mode to handle. Blocking the build would push people to split methods artificially just to satisfy the tool — producing worse code than the one it prevents. Because the ratchet has no backlog, the warning stays rare and therefore visible. Escalate it where you want it to block, typically in CI only:
+**Why a warning and not an error.** Unlike a duplicate or a name collision, a complexity increase is sometimes the legitimate evolution of the software: a new business case, a new failure mode to handle. Blocking the build would push people to split methods artificially just to satisfy the tool  producing worse code than the one it prevents. Because the ratchet has no backlog, the warning stays rare and therefore visible. Escalate it where you want it to block, typically in CI only:
 
 ```bash
 dotnet build -warnaserror:ARCH022
@@ -372,11 +374,11 @@ dotnet build -warnaserror:ARCH022
 
 **How the comparison works.** The shipped MSBuild target extracts the `HEAD` version of every changed `.cs` file (`git show HEAD:<file>`) into `obj/`, and hands them to the analyzer as `AdditionalFiles`. The analyzer parses both versions and compares them method by method. Methods are matched on *type + name + parameter count*, never on line numbers, so moving a method inside its file does not lose its history.
 
-Complexity is the classic count: 1, plus one per decision point (`if`, loops, `case`, `catch`, `&&`, `||`, `?:`, `??`, switch arms, `when`). `else` adds nothing — it belongs to the `if` already counted.
+Complexity is the classic count: 1, plus one per decision point (`if`, loops, `case`, `catch`, `&&`, `||`, `?:`, `??`, switch arms, `when`). `else` adds nothing  it belongs to the `if` already counted.
 
 **Never reported:** a method absent from `HEAD` (it is new, so it degraded nothing), a file that did not change, and anything below the allowed increase. As with the LOC budget, the reference is `HEAD`, so committing moves the ratchet forward.
 
-### ARCH023 — The ratchet goes strict in a hotspot
+### ARCH023  The ratchet goes strict in a hotspot
 
 A file the team keeps touching **and** that keeps growing more complex is where your next incident comes from. ARCH023 is the same regression as ARCH022, reported as an **error** instead of a warning when it happens in such a file.
 
@@ -389,21 +391,21 @@ architecture_analyzer.hotspot_churn_percentile = 90
 architecture_analyzer.churn_window_days = 90
 ```
 
-**Churn does not measure anything — it selects.** This is the key design point: churn can only ever grow (every commit increases it), so it could never be ratcheted itself. Instead it is used as a *targeting* mechanism: it decides which files get the strict treatment. The rule therefore reads as *"you may add complexity, except where it is dangerous"* — which is precisely the answer to the objection that complexity is sometimes a legitimate evolution.
+**Churn does not measure anything  it selects.** This is the key design point: churn can only ever grow (every commit increases it), so it could never be ratcheted itself. Instead it is used as a *targeting* mechanism: it decides which files get the strict treatment. The rule therefore reads as *"you may add complexity, except where it is dangerous"*  which is precisely the answer to the objection that complexity is sometimes a legitimate evolution.
 
 The count comes from `git log --no-merges --since=<window> --name-only`, written once per repository into the system temp folder and shared by every project of the solution rather than recomputed for each. A file below the minimum (3 recent changes) is never a hotspot, however small the repository.
 
-### ARCH024 — Conventions inferred from the code itself
+### ARCH024  Conventions inferred from the code itself
 
-Every analyzer makes you *declare* your conventions. But a code base already **has** conventions — they are just implicit. ARCH024 learns them and flags the types that break them:
+Every analyzer makes you *declare* your conventions. But a code base already **has** conventions  they are just implicit. ARCH024 learns them and flags the types that break them:
 
 > *Out of 18 `*Provider` types, 17 share folder = `Infrastructure/Providers`; `SmtpProvider` has `Services`. Align it with the convention, or declare the exception.*
 
 Nobody wrote that rule. It was **observed**.
 
-**How it learns.** For each type, the analyzer extracts a few traits — folder, namespace, kind (`class`/`record`/`struct`), `sealed`, `static`, accessibility, base type — and groups types by the suffix of their name (`CustomerBusinessModel` is grouped both as `*BusinessModel` and, more broadly, as `*Model`; the more specific suffix wins). Whenever a suffix has enough examples and a trait shares one value in at least 90% of them, that is a convention.
+**How it learns.** For each type, the analyzer extracts a few traits  folder, namespace, kind (`class`/`record`/`struct`), `sealed`, `static`, accessibility, base type  and groups types by the suffix of their name (`CustomerBusinessModel` is grouped both as `*BusinessModel` and, more broadly, as `*Model`; the more specific suffix wins). Whenever a suffix has enough examples and a trait shares one value in at least 90% of them, that is a convention.
 
-**What it enforces.** Conventions are learned on **every** type of the project — the legacy majority defines the norm — but deviations are reported **only in the files the current change touched**. Existing outliers are never surfaced; only new code must conform. Without the change list produced by the shipped MSBuild target, the rule stays silent.
+**What it enforces.** Conventions are learned on **every** type of the project  the legacy majority defines the norm  but deviations are reported **only in the files the current change touched**. Existing outliers are never surfaced; only new code must conform. Without the change list produced by the shipped MSBuild target, the rule stays silent.
 
 ```ini
 [*.cs]
@@ -414,7 +416,101 @@ architecture_analyzer.convention_ignore = Provider>folder;Model>sealed   # conve
 
 **Additive to ARCH001 / ARCH003.** The explicit rule wins: for any suffix you configured in `model_suffix`, `model_conventions` or `model_folder_allowed_suffixes`, no *folder* convention is inferred, so a deviation is never reported twice. Every other trait of that suffix is still learned.
 
-**Why a warning.** The majority can be the mistake, and only a human can tell. The message shows its evidence — "17 of 18" — precisely so that call takes ten seconds. A majority of "not sealed", "not static" or "no base type" is just the default and is never treated as a convention.
+**Why a warning.** The majority can be the mistake, and only a human can tell. The message shows its evidence  "17 of 18"  precisely so that call takes ten seconds. A majority of "not sealed", "not static" or "no base type" is just the default and is never treated as a convention.
+
+### ARCH025  The related-test gate
+
+ARCH021 measures the *volume* of test lines a prompt adds. An AI agent games it by writing tests anywhere  an unrelated file, a padded test, a test with no assertion. ARCH025 closes that hole: the test must actually be *about the code this change touched*.
+
+```ini
+[*.cs]
+architecture_analyzer.test_link_min_added_lines = 3
+```
+
+A production member is **accountable** when this change makes it new (with at least the floor of body lines) or grows it by at least the floor, and it is not private. An accountable member `T.M` is satisfied only when some test method:
+
+- was **added or modified by this same change** (a whitespace edit to an old test does not count  the comparison ignores trivia),
+- carries a test attribute and is not `[Skip]`/`[Ignore]`/`[Explicit]`,
+- contains an **assertion** (`Assert`, `Should`, `Verify`, `Received`…),
+- **invokes `M`**  not inside `nameof`/`typeof`, not inside a swallowing `try/catch`,
+- in a file that **references the concrete type `T`** in a real type position, so mocking the interface (`Substitute.For<IT>()`) does not count.
+
+Otherwise:
+
+```
+error ARCH025: 'OrderService.Apply' was added or modified by this change but no added or modified test exercises it (0 changed test(s) reference OrderService…): add a test that constructs OrderService and asserts on the result of Apply, then rebuild.
+```
+
+**Measures movement, not state.** Only members this change makes new or grows are ever examined, so switching it on in a legacy repository reports nothing until the next change  no backlog. It reuses the HEAD copies, changed-files list and test-file classification the shipped MSBuild target already produces; the target also hands the changed test files to the production compilation, which never compiles them.
+
+**Honest limits.** Being static, it cannot judge that an assertion is *meaningful* (a `Assert.True(true)` next to the call passes) or that the call is actually executed. It flags integration/DI/fixture tests that exercise the code without naming the type; scope those out with `test_link_exclude_paths` or a folder-scoped `dotnet_diagnostic.ARCH025.severity = none`. Property accessors are not yet accountable. Off by default; enable per repository.
+
+### ARCH027  Oscillation
+
+When an AI agent goes in circles, it re-adds code that a recent commit removed. No stateless tool can see this: it needs the last few commits, not the current snapshot. ARCH027 reports it, as a plain fact.
+
+```ini
+[*.cs]
+architecture_analyzer.oscillation_window_commits = 5
+```
+
+The shipped MSBuild task collects the blocks of code removed in the last N commits (via `git log -p`), and the blocks this change adds (working tree plus untracked files). A block is three or more consecutive non-trivial lines, normalized so a re-add with different indentation still matches. When an added block hashes to a removed one:
+
+```
+warning ARCH027: This change re-adds a block of code that commit a1b2c3d (simplify the retry loop) removed 2 commit(s) ago.
+```
+
+**It only states the fact.** It makes no attempt to tell a deliberate revert from thrashing  both look the same, and only you know which. That is why it is a warning, not an error. Keep the window small (a few commits) so it targets churn within a working session rather than old history. Off by default; enable per repository.
+
+### Impact history  attribute each change to its prompt
+
+Every change an AI agent makes starts with a prompt. This feature keeps a local CSV that records, for each change, what the change did **and the prompt that caused it**  so `git blame` gains a "why", and you can see which prompt pushed a change over budget or dropped the test ratio.
+
+Turn it on (it is **off by default**, because it writes files into your repository):
+
+```ini
+[*.cs]
+architecture_analyzer.impact_history_enabled = true
+```
+
+On every real build with changes since `HEAD`, the shipped MSBuild target appends a row to `.architecture/impact-history.csv` at the repository root:
+
+```
+timestamp_utc,prompt,files_changed,added_production_lines,added_test_lines,test_ratio_percent,project_budget_percent,solution_budget_percent
+2026-09-14T13:20:05Z,"add session rotation to the module",7,312,40,12,20,10
+```
+
+**One row per prompt, not per build.** A single prompt triggers many builds; a row is written only when the prompt or the diff changed since the last row, so the file stays a timeline of prompts, not build noise. It is skipped during IDE design-time builds.
+
+**Where the prompt comes from.** The build reads `.architecture/current-prompt.txt` at the repo root, or the `ARCHITECTURE_ANALYZER_PROMPT` environment variable as a fallback. For Claude Code, a one-line `UserPromptSubmit` hook writes that file automatically. With neither present, the row is still written, with an empty prompt.
+
+**Setting up the Claude Code hook.** Merge this into `.claude/settings.json` (shared) or `.claude/settings.local.json` (local, git-ignored):
+
+```json
+{
+  "hooks": {
+    "UserPromptSubmit": [
+      { "hooks": [ { "type": "command",
+        "command": "pwsh -NoProfile -File \"${CLAUDE_PROJECT_DIR}/.claude/hooks/capture-prompt.ps1\"" } ] }
+    ]
+  }
+}
+```
+
+Then add `.claude/hooks/capture-prompt.ps1`, which writes the prompt from the hook's stdin JSON to the file the build reads:
+
+```powershell
+$data = [Console]::In.ReadToEnd() | ConvertFrom-Json
+$root = if ($env:CLAUDE_PROJECT_DIR) { $env:CLAUDE_PROJECT_DIR } else { $data.cwd }
+$dir  = Join-Path $root '.architecture'
+New-Item -ItemType Directory -Path $dir -Force | Out-Null
+Set-Content -Path (Join-Path $dir 'current-prompt.txt') -Value $data.user_prompt -NoNewline -Encoding UTF8
+exit 0
+```
+
+Use `powershell` instead of `pwsh` if you do not have PowerShell 7+; on a shell without PowerShell, `capture-prompt.sh` (Bash + `jq`) is the equivalent. The hook exits 0, so it never blocks a prompt; the analyzer's only requirement is that the file ends up containing the prompt. Ready-made copies of both scripts and this snippet are in [docs/hooks](docs/hooks/README.md).
+
+**Local by design.** Add `.architecture/` to your `.gitignore`; the trail is per-developer and never committed. The prompt is stored verbatim  keep the history local if your prompts can contain anything sensitive.
 
 ## Full worked example
 

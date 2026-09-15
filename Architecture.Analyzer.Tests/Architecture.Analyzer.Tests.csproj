@@ -18,6 +18,9 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Architecture.Analyzer\Architecture.Analyzer.csproj" />
+    <!-- The compiled MSBuild task, so its framework-free helpers (OscillationScan) can be unit-tested
+         directly. Microsoft.Build is PrivateAssets in that project, so it does not flow here. -->
+    <ProjectReference Include="..\Architecture.Analyzer.Build\Architecture.Analyzer.Build.csproj" />
   </ItemGroup>
 
   <ItemGroup>

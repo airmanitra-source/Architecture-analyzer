@@ -16,3 +16,6 @@ TestResults/
 
 # OS files
 .DS_Store
+
+# Architecture.Analyzer impact history (local per-developer trail)
+.architecture/

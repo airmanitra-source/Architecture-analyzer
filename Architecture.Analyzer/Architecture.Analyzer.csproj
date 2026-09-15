@@ -10,7 +10,7 @@
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <NoPackageAnalysis>true</NoPackageAnalysis>
     <PackageId>AI.Prompt.Architecture.Analyzers</PackageId>
-    <Version>1.12.1</Version>
+    <Version>1.16.0</Version>
     <Authors>Herimanitra</Authors>
     <Description>Roslyn analyzers for enforcing architecture and naming conventions in .NET solutions.</Description>
     <PackageTags>roslyn;analyzer;architecture;dotnet</PackageTags>
@@ -24,6 +24,13 @@
   <ItemGroup>
     <PackageReference Include="Microsoft.CodeAnalysis.Analyzers" Version="3.11.0" PrivateAssets="all" />
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.11.0" PrivateAssets="all" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Build the MSBuild task assembly before packing, but never reference it as a library
+         (ReferenceOutputAssembly=false) and never flow it to consumers as a dependency. -->
+    <ProjectReference Include="..\Architecture.Analyzer.Build\Architecture.Analyzer.Build.csproj"
+                     ReferenceOutputAssembly="false" PrivateAssets="all" />
   </ItemGroup>
 
   <ItemGroup>
@@ -47,6 +54,11 @@
          every consuming project. -->
     <None Include="build\Architecture.Analyzer.targets" Pack="true" PackagePath="build\$(PackageId).targets" Visible="false" />
     <None Include="build\Architecture.Analyzer.targets" Pack="true" PackagePath="buildTransitive\$(PackageId).targets" Visible="false" />
+
+    <!-- The compiled build-time task assembly, referenced by the .targets via UsingTask AssemblyFile.
+         Packed under tasks/ (sibling of build/ and buildTransitive/). -->
+    <None Include="..\Architecture.Analyzer.Build\bin\$(Configuration)\netstandard2.0\Architecture.Analyzer.Build.dll"
+          Pack="true" PackagePath="tasks" Visible="false" />
   </ItemGroup>
 
   <ItemGroup>

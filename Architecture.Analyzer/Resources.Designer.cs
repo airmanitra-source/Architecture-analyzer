@@ -433,6 +433,42 @@ namespace Architecture.Analyzer {
         }
 
         /// <summary>
+        ///   Recherche une chaîne localisée semblable à Code ajouté sans test qui l'exerce.
+        /// </summary>
+        internal static string TestLinkTitle {
+            get {
+                return ResourceManager.GetString("TestLinkTitle", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Recherche une chaîne localisée semblable à '{0}' a été ajouté ou modifié par ce changement....
+        /// </summary>
+        internal static string TestLinkMessageFormat {
+            get {
+                return ResourceManager.GetString("TestLinkMessageFormat", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Recherche une chaîne localisée semblable à Réintroduction de code récemment supprimé.
+        /// </summary>
+        internal static string OscillationTitle {
+            get {
+                return ResourceManager.GetString("OscillationTitle", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Recherche une chaîne localisée semblable à Ce changement réintroduit un bloc de code....
+        /// </summary>
+        internal static string OscillationMessageFormat {
+            get {
+                return ResourceManager.GetString("OscillationMessageFormat", resourceCulture);
+            }
+        }
+
+        /// <summary>
         ///   Recherche une chaîne localisée semblable à Ce nom de type existe déjà dans un projet référencé.
         /// </summary>
         internal static string DuplicateTypeNameTitle {
